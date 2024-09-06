@@ -1,10 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-export default function budget() {
+const Budget = () => {
   return (
     <View>
-      <Text>budget</Text>
+      <Text>Budget Intface Here</Text>
     </View>
   )
 }
+
+export default Budget

@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const Settings = () => {
+const _layout = () => {
   return (
     <View>
-      <Text>Settings</Text>
+      <Text>_layout</Text>
     </View>
   )
 }
 
-export default Settings
+export default _layout
