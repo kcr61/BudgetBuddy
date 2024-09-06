@@ -1,23 +1,16 @@
-import { Redirect, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Image, SrcollView, Text, View } from 'react-native';
-import {SafeAreaView} from "react-native-safe-area-context";
+import { Text, View } from 'react-native';
+import { Link } from 'expo-router';
+import 'nativewind';
+
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text s
-      tyle={{ color: '#8aecc7',}}>hello world</Text>
+    <View className="flex-1 items-center justify-center bg-white" >
+      <Text class> Welcome to Budget Buddy !!!</Text>
       <StatusBar style="auto" />
+      <Link href={'/budget'} style={{color:'#8aecc7'}}>Welcome to Budget</Link>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
