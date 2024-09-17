@@ -1,31 +1,33 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, TouchableOpacity, Switch, Modal, Pressable } from 'react-native';
-import DatePicker from 'react-native-date-picker';
+import { Calendar } from 'react-native-calendars';
 
 const BudgetScreen = () => {
   const [expenses, setExpenses] = useState([]);
   const [expenseName, setExpenseName] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
-  const [dueDate, setDueDate] = useState(new Date());
+  const [dueDate, setDueDate] = useState(null);
   const [isAutoPay, setIsAutoPay] = useState(false);
-  const [open, setOpen] = useState(false); 
+  const [showCalendar, setShowCalendar] = useState(false); // Control calendar visibility
   const [modalVisible, setModalVisible] = useState(false);
-  const [deleteIndex, setDeleteIndex] = useState(null); // Index of expense to be deleted
+  const [deleteIndex, setDeleteIndex] = useState(null);
 
   // Function to add a new expense
   const addExpense = () => {
     const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
-    if (expenseName && cleanedAmount && dueDate) {
+    if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate) {
       setExpenses([...expenses, { 
         name: expenseName, 
         amount: parseFloat(cleanedAmount),
-        dueDate: dueDate.toISOString().split('T')[0],  // Save the date in 'YYYY-MM-DD' format
+        dueDate: dueDate,
         isAutoPay: isAutoPay 
       }]);
       setExpenseName('');
       setExpenseAmount('');
-      setDueDate(new Date());
+      setDueDate(null);
       setIsAutoPay(false);
+    } else {
+      alert('Please enter valid expense details and select a due date.');
     }
   };
 
@@ -42,6 +44,12 @@ const BudgetScreen = () => {
     setModalVisible(false); // Hide the modal after deletion
   };
 
+  // Handle date selection
+  const onDateSelect = (date) => {
+    setDueDate(date.dateString);
+    setShowCalendar(false); // Close the calendar after selection
+  };
+
   // Render each expense item
   const renderExpenseItem = ({ item, index }) => {
     return (
@@ -52,7 +60,6 @@ const BudgetScreen = () => {
           <Text>Due: {item.dueDate}</Text>
           <Text>Auto-Pay: {item.isAutoPay ? 'Yes' : 'No'}</Text>
         </View>
-        {}
         <TouchableOpacity 
           style={styles.deleteButton}
           onPress={() => confirmDeleteExpense(index)}
@@ -85,22 +92,18 @@ const BudgetScreen = () => {
         onChangeText={setExpenseAmount}
       />
 
-      {/* Date Picker for Due Date */}
-      <Button title="Select Due Date" onPress={() => setOpen(true)} />
-      <DatePicker
-        modal
-        open={open}
-        date={dueDate}
-        onConfirm={(date) => {
-          setOpen(false);
-          setDueDate(date);
-        }}
-        onCancel={() => {
-          setOpen(false);
-        }}
-      />
+      {/* Button for calendar selection */}
+      <Button title={dueDate ? `Due Date: ${dueDate}` : 'Select Due Date'} onPress={() => setShowCalendar(true)} />
+      
+      {/* How to select due date */}
+      {showCalendar && (
+        <Calendar
+          onDayPress={onDateSelect}
+          markedDates={dueDate ? { [dueDate]: { selected: true, selectedColor: 'blue' } } : {}}
+        />
+      )}
 
-      {/*Auto-Pay Slider */}
+      {/* Auto-Pay Slider */}
       <View style={styles.switchContainer}>
         <Text>Auto-Pay</Text>
         <Switch
@@ -121,7 +124,7 @@ const BudgetScreen = () => {
         <Text style={styles.totalText}>Total: ${totalAmount.toFixed(2)}</Text>
       </View>
 
-      {/* Confirmation Selection */}
+      {}
       <Modal
         transparent={true}
         visible={modalVisible}
