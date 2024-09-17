@@ -2,7 +2,7 @@ import { View, Text, Image } from 'react-native';
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faHouse, faCog, faUser, faPiggyBank } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faCog, faUser, faPiggyBank, faCalendar } from '@fortawesome/free-solid-svg-icons';
 
 const TabsLayout = () => {
     return (
@@ -25,6 +25,14 @@ const TabsLayout = () => {
                     tabBarIcon: ({ color, size }) => <FontAwesomeIcon icon={faPiggyBank} color={color} size={size} />,
                     headerShown: false
                 }}
+            />
+            <Tabs.Screen
+            name="transaction"
+            options={{
+                title: 'Transactions',
+                tabBarIcon: ({ color, size }) => <FontAwesomeIcon icon={faCalendar} color={color} size={size} />,
+                headerShown: false
+            }}
             />
 
             <Tabs.Screen
