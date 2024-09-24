@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, TouchableOpacity, Switch, Modal, Pressable, SafeAreaView, Picker } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import CircularChart from '../../components/PieChart.jsx';
+import CircularChart from '../../compents/PieChart.jsx';
 
 const BudgetScreen = () => {
     const [expenses, setExpenses] = useState([]);
