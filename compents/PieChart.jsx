@@ -16,10 +16,19 @@ const CircularChart = ({ data }) => {
 
   // colors for categories
   const categoryColors = {
-    Bills: '#FF6347',    // Tomato
-    Shopping: '#36A2EB', // Blue
-    Eating: '#FFCE56',   // Yellow
-    Others: '#4BC0C0',   // Teal
+    Bills: '#FF6347',       // Tomato
+    Rent: '#FF4500',        // OrangeRed
+    Utilities: '#FF7F50',   // Coral
+    Internet: '#DC143C',    // Crimson
+    Shopping: '#36A2EB',    // Blue
+    Groceries: '#4682B4',    // SteelBlue
+    Clothing: '#1E90FF',    // DodgerBlue
+    Electronics: '#00BFFF',  // DeepSkyBlue
+    Eating: '#FFCE56',      // Yellow
+    Restaurants: '#FFD700', // Gold
+    FastFood: '#FFA500',    // Orange
+    Others: '#4BC0C0',      // Teal
+    Miscellaneous: '#008080',// Teal
   };
 
   const chartData = data.map(expense => {
@@ -28,7 +37,7 @@ const CircularChart = ({ data }) => {
     return {
       name: `${expense.name}: $${expense.value.toFixed(2)} (${percentage}%)`, 
       amount: expense.value,                                               
-      color: categoryColors[expense.name] || '#999999',                   
+      color: categoryColors[expense.name] || '#999999', 
       legendFontColor: "#7F7F7F",
       legendFontSize: 15,
     };
