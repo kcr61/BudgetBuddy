@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, Switch, TextInput, Button, StyleSheet, Modal, Pressable, Picker } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { Link } from 'expo-router';
 
 const SettingsScreen = () => {
+  
+
   // User Preferences
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -69,7 +73,6 @@ const SettingsScreen = () => {
         </>
       )}
 
-      {}
       <TextInput
         style={[styles.input, { color: isDarkMode ? '#fff' : '#000', backgroundColor: isDarkMode ? '#444' : '#eee' }]}
         placeholder="Username"
@@ -84,7 +87,6 @@ const SettingsScreen = () => {
         onChangeText={setBio}
       />
 
-      {}
       <View style={styles.pickerContainer}>
         <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Language</Text>
         <Picker
@@ -129,6 +131,10 @@ const SettingsScreen = () => {
       <Button title="Save Settings" onPress={handleSaveSettings} />
 
       <Button title="Logout" color="#ff4d4d" onPress={handleLogout} />
+
+      {/* New User Profile Link */}
+     // <Link href="/profile" style={{ color: 'blue', marginTop: 20 }}>Go to User Profile</Link>
+
 
       {/*Save Confirmation */}
       <Modal

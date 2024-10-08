@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, Button, TouchableOpacity, Switch, Modal, Pressable, SafeAreaView, Picker } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TextInput, Button, TouchableOpacity, Switch, Modal, Pressable, SafeAreaView} from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { Picker } from '@react-native-picker/picker';
 import CircularChart from '../../compents/PieChart.jsx'; 
 
 const BudgetScreen = () => {
+    // No changes to state variables
     const [expenses, setExpenses] = useState([]);
     const [expenseName, setExpenseName] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
@@ -15,7 +17,7 @@ const BudgetScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
 
-    // Category and subcategory mapping
+    // No changes to categories object
     const categories = {
         Bills: ['Rent', 'Utilities', 'Internet'],
         Shopping: ['Groceries', 'Clothing', 'Electronics'],
@@ -23,7 +25,7 @@ const BudgetScreen = () => {
         Others: ['Miscellaneous']
     };
 
-    // Colors associated with each category
+    // No changes to categoryColors object
     const categoryColors = {
         Bills: '#FF6347',
         Rent: '#FF4500',
@@ -40,7 +42,7 @@ const BudgetScreen = () => {
         Miscellaneous: '#008080',
     };
 
-    // Function to add a new expense to the list
+    // No changes to these functions
     const addExpense = () => {
         const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
         if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate && category && subCategory) {
@@ -67,33 +69,26 @@ const BudgetScreen = () => {
         setIsAutoPay(false);
     };
 
-    // Function to delete an expense
     const deleteExpense = () => {
         const updatedExpenses = expenses.filter((_, i) => i !== deleteIndex);
         setExpenses(updatedExpenses);
         setModalVisible(false); 
     };
 
-    // Function to calculate totals for each category
     const calculateCategoryTotals = () => {
         const categoryTotals = {};
-        
-        // Initialize totals for categories
         Object.keys(categories).forEach(cat => categoryTotals[cat] = 0);
-
         expenses.forEach(expense => {
             if (categoryTotals[expense.category] !== undefined) {
                 categoryTotals[expense.category] += expense.amount;
             }
         });
-
         return Object.entries(categoryTotals).map(([name, value]) => ({
             name,
             value
-        })) || []; 
+        })); 
     };
 
-    // Function to render each expense item in the FlatList
     const renderExpenseItem = ({ item, index }) => (
         <View style={styles.item}>
             <View style={styles.itemContent}>
@@ -117,7 +112,6 @@ const BudgetScreen = () => {
                 <CircularChart data={calculateCategoryTotals()} style={styles.chart} />
             </View>
 
-            {/* Input fields for adding new expenses */}
             <TextInput 
                 style={styles.input} 
                 placeholder="Expense Name" 
@@ -132,41 +126,44 @@ const BudgetScreen = () => {
                 onChangeText={setExpenseAmount} 
             />
             
-            {/* How to select a category */}
-            <Picker 
-                selectedValue={category} 
-                style={styles.picker} 
-                onValueChange={(itemValue) => { 
-                    setCategory(itemValue); 
-                    setSubCategory(''); 
-                }}
-            >
-                <Picker.Item label="Select Category" value="" />
-                {Object.keys(categories).map(cat => (
-                    <Picker.Item key={cat} label={cat} value={cat} />
-                ))}
-            </Picker>
+            {/* CHANGE 1: Wrapped Picker in View container and updated props */}
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={category}
+                    style={styles.picker}
+                    onValueChange={(itemValue) => {
+                        setCategory(itemValue);
+                        setSubCategory(''); // Reset subcategory when category changes
+                    }}
+                >
+                    <Picker.Item label="Select Category" value="" />
+                    {Object.keys(categories).map((cat) => (
+                        <Picker.Item key={cat} label={cat} value={cat} />
+                    ))}
+                </Picker>
+            </View>
 
-            {/* How to select a subcategory */}
-            <Picker 
-                selectedValue={subCategory} 
-                style={styles.picker} 
-                enabled={category.length > 0} 
-                onValueChange={(itemValue) => setSubCategory(itemValue)}
-            >
-                <Picker.Item label="Select Subcategory" value="" />
-                {category && categories[category].map(subCat => (
-                    <Picker.Item key={subCat} label={subCat} value={subCat} />
-                ))}
-            </Picker>
+            {/* CHANGE 2: Wrapped Picker in View container and updated subcategory logic */}
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={subCategory}
+                    style={styles.picker}
+                    enabled={category !== ''} // Only enable if category is selected
+                    onValueChange={(itemValue) => setSubCategory(itemValue)}
+                >
+                    <Picker.Item label="Select Subcategory" value="" />
+                    {category !== '' && // Only show subcategories if category is selected
+                        categories[category].map((subCat) => (
+                            <Picker.Item key={subCat} label={subCat} value={subCat} />
+                        ))}
+                </Picker>
+            </View>
 
-            {/* Button to select due date */}
             <Button 
                 title={dueDate ? `Due Date: ${dueDate}` : 'Select Due Date'} 
                 onPress={() => setShowCalendar(true)} 
             />
 
-            {/* Calendar for selecting due date */}
             {showCalendar && (
                 <Calendar
                     onDayPress={(date) => {
@@ -177,16 +174,13 @@ const BudgetScreen = () => {
                 />
             )}
 
-            {/* Switch for enabling/disabling auto-pay */}
             <View style={styles.switchContainer}>
                 <Text>Auto-Pay</Text>
                 <Switch value={isAutoPay} onValueChange={setIsAutoPay} />
             </View>
 
-            {/* Button to add the expense */}
             <Button title="Add Expense" onPress={addExpense} />
 
-            {/* FlatList for displaying expenses */}
             <FlatList
                 data={expenses}
                 keyExtractor={(item, index) => index.toString()}
@@ -194,7 +188,6 @@ const BudgetScreen = () => {
                 ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
 
-            {}
             <Modal 
                 transparent={true} 
                 visible={modalVisible} 
@@ -246,14 +239,19 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         paddingHorizontal: 10,
         borderRadius: 5,
+        backgroundColor: 'white', // CHANGE 3: Added for consistency
+    },
+    // CHANGE 4: Updated picker styles
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        marginBottom: 10,
+        backgroundColor: 'white',
     },
     picker: {
         height: 50,
         width: '100%',
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 5,
     },
     switchContainer: {
         flexDirection: 'row',
@@ -261,6 +259,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 20,
     },
+    // No changes to the rest of the styles
     separator: {
         height: 1,
         backgroundColor: '#CED0CE',
