@@ -7,7 +7,6 @@ const SignInSignUpScreen = ({ onAuthSuccess }) => {
   const [password, setPassword] = useState('');
 
   const handleAuth = () => {
-    // Mock authentication logic
     onAuthSuccess();
   };
 
@@ -42,18 +41,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#036704',
   },
   title: {
-    fontSize: 24,
-    marginBottom: 16,
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    color: '#333',
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
+    height: 50,
+    borderColor: '#ccc',
     borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 8,
+    marginBottom: 20,
+    paddingHorizontal: 10,
     width: '100%',
+    borderRadius: 5,
+    backgroundColor: '#fff',
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    color: '#fff',
+    padding: 10,
+    borderRadius: 5,
   },
 });
 
