@@ -52,6 +52,7 @@ const TabsLayout = () => {
                     headerShown: false
                 }}
             />
+            
 
         </Tabs>
     );
