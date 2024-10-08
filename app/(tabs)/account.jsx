@@ -141,7 +141,7 @@ const Account = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#036704',
   },
   title: {
     fontSize: 24,
