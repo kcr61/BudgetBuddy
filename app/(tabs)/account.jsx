@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, Modal, Pressable, Keyboard } from 'react-native';
 
 const Account = () => {
   // Emergency Fund Tracker
@@ -11,6 +11,11 @@ const Account = () => {
   const [investmentName, setInvestmentName] = useState('');
   const [investmentAmount, setInvestmentAmount] = useState('');
   const [investments, setInvestments] = useState([]);
+
+  // Yearly Report
+  const [yearlyIncome, setYearlyIncome] = useState('');
+  const [yearlyExpenses, setYearlyExpenses] = useState('');
+  const [yearlyReport, setYearlyReport] = useState('');
 
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
@@ -58,6 +63,19 @@ const Account = () => {
     setInvestments(updatedInvestments);
     setModalVisible(false);
     setSelectedInvestmentId(null);
+  };
+
+  const handleCalculateYearlyReport = () => {
+    const income = parseFloat(yearlyIncome);
+    const expenses = parseFloat(yearlyExpenses);
+
+    if (!isNaN(income) && !isNaN(expenses)) {
+      const report = income - expenses;
+      setYearlyReport(`Your net savings for the year: $${report.toFixed(2)}`);
+    } else {
+      console.error('Please enter valid yearly income and expenses.');
+      setYearlyReport('');
+    }
   };
 
   return (
@@ -112,6 +130,31 @@ const Account = () => {
           </View>
         )}
       />
+
+      {/* Yearly Report Section */}
+      <Text style={styles.title}>Yearly Report</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter yearly income"
+        keyboardType="numeric"
+        value={yearlyIncome}
+        onChangeText={setYearlyIncome}
+        returnKeyType="done" // Add this line
+        onSubmitEditing={() => Keyboard.dismiss()} 
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Enter yearly expenses"
+        keyboardType="numeric"
+        value={yearlyExpenses}
+        onChangeText={setYearlyExpenses}
+        returnKeyType="done" // Add this line
+        onSubmitEditing={() => Keyboard.dismiss()}
+      />
+      <Button title="Calculate Yearly Report" onPress={handleCalculateYearlyReport} />
+      <Text style={styles.result}>
+        {yearlyReport}
+      </Text>
 
       {/* Modal for Delete Button */}
       <Modal
