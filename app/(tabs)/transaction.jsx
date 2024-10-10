@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, Button, TouchableOpacity, Switch, Modal, Pressable, SafeAreaView} from 'react-native';
+import { 
+    View, 
+    Text, 
+    FlatList, 
+    StyleSheet, 
+    TextInput, 
+    TouchableOpacity, 
+    Switch, 
+    Modal, 
+    Pressable, 
+    SafeAreaView,
+    ScrollView,
+    Platform
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Picker } from '@react-native-picker/picker';
-import CircularChart from '../../compents/PieChart.jsx'; 
+import CircularChart from '../../compents/PieChart.jsx';
 
 const BudgetScreen = () => {
-    // No changes to state variables
     const [expenses, setExpenses] = useState([]);
     const [expenseName, setExpenseName] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
@@ -17,7 +29,6 @@ const BudgetScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
 
-    // No changes to categories object
     const categories = {
         Bills: ['Rent', 'Utilities', 'Internet'],
         Shopping: ['Groceries', 'Clothing', 'Electronics'],
@@ -25,7 +36,6 @@ const BudgetScreen = () => {
         Others: ['Miscellaneous']
     };
 
-    // No changes to categoryColors object
     const categoryColors = {
         Bills: '#FF6347',
         Rent: '#FF4500',
@@ -42,7 +52,23 @@ const BudgetScreen = () => {
         Miscellaneous: '#008080',
     };
 
-    // No changes to these functions
+    const renderPicker = (items, placeholder, value, onValueChange) => {
+        return (
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={value}
+                    onValueChange={onValueChange}
+                    style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
+                >
+                    <Picker.Item label={placeholder} value="" />
+                    {items.map((item, index) => (
+                        <Picker.Item key={index} label={item} value={item} />
+                    ))}
+                </Picker>
+            </View>
+        );
+    };
+
     const addExpense = () => {
         const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
         if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate && category && subCategory) {
@@ -54,7 +80,7 @@ const BudgetScreen = () => {
                 subCategory: subCategory,
                 isAutoPay: isAutoPay 
             }]);
-            resetForm(); 
+            resetForm();
         } else {
             alert('Please enter valid expense details, select a category and subcategory, and choose a due date.');
         }
@@ -72,7 +98,7 @@ const BudgetScreen = () => {
     const deleteExpense = () => {
         const updatedExpenses = expenses.filter((_, i) => i !== deleteIndex);
         setExpenses(updatedExpenses);
-        setModalVisible(false); 
+        setModalVisible(false);
     };
 
     const calculateCategoryTotals = () => {
@@ -86,20 +112,26 @@ const BudgetScreen = () => {
         return Object.entries(categoryTotals).map(([name, value]) => ({
             name,
             value
-        })); 
+        }));
     };
 
     const renderExpenseItem = ({ item, index }) => (
         <View style={styles.item}>
             <View style={styles.itemContent}>
-                <Text>{item.name}</Text>
-                <Text>${item.amount.toFixed(2)}</Text>
-                <Text>Due: {item.dueDate}</Text>
-                <Text>Category: {item.category}</Text>
-                <Text>Subcategory: {item.subCategory}</Text>
-                <Text>Auto-Pay: {item.isAutoPay ? 'Yes' : 'No'}</Text>
+                <Text style={styles.itemText}>{item.name}</Text>
+                <Text style={styles.itemText}>${item.amount.toFixed(2)}</Text>
+                <Text style={styles.itemText}>Due: {item.dueDate}</Text>
+                <Text style={styles.itemText}>Category: {item.category}</Text>
+                <Text style={styles.itemText}>Subcategory: {item.subCategory}</Text>
+                <Text style={styles.itemText}>Auto-Pay: {item.isAutoPay ? 'Yes' : 'No'}</Text>
             </View>
-            <TouchableOpacity style={styles.deleteButton} onPress={() => { setDeleteIndex(index); setModalVisible(true); }}>
+            <TouchableOpacity 
+                style={styles.deleteButton} 
+                onPress={() => { 
+                    setDeleteIndex(index); 
+                    setModalVisible(true); 
+                }}
+            >
                 <Text style={styles.deleteButtonText}>Delete</Text>
             </TouchableOpacity>
         </View>
@@ -107,86 +139,103 @@ const BudgetScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.largeTitle}>Transactions</Text>
-            <View style={styles.header}>
-                <CircularChart data={calculateCategoryTotals()} style={styles.chart} />
-            </View>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <Text style={styles.largeTitle}>Transactions</Text>
+                
+                <View style={styles.chartContainer}>
+                    <CircularChart data={calculateCategoryTotals()} />
+                </View>
 
-            <TextInput 
-                style={styles.input} 
-                placeholder="Expense Name" 
-                value={expenseName} 
-                onChangeText={setExpenseName} 
-            />
-            <TextInput 
-                style={styles.input} 
-                placeholder="Expense Amount" 
-                keyboardType="numeric" 
-                value={expenseAmount} 
-                onChangeText={setExpenseAmount} 
-            />
-            
-            {/* CHANGE 1: Wrapped Picker in View container and updated props */}
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={category}
-                    style={styles.picker}
-                    onValueChange={(itemValue) => {
-                        setCategory(itemValue);
-                        setSubCategory(''); // Reset subcategory when category changes
-                    }}
-                >
-                    <Picker.Item label="Select Category" value="" />
-                    {Object.keys(categories).map((cat) => (
-                        <Picker.Item key={cat} label={cat} value={cat} />
-                    ))}
-                </Picker>
-            </View>
+                <View style={styles.formContainer}>
+                    <TextInput 
+                        style={styles.input} 
+                        placeholder="Expense Name" 
+                        value={expenseName} 
+                        onChangeText={setExpenseName}
+                        placeholderTextColor="#666" 
+                    />
+                    <TextInput 
+                        style={styles.input} 
+                        placeholder="Expense Amount" 
+                        keyboardType="numeric" 
+                        value={expenseAmount} 
+                        onChangeText={setExpenseAmount}
+                        placeholderTextColor="#666" 
+                    />
+                    
+                    {renderPicker(
+                        Object.keys(categories),
+                        "Select Category",
+                        category,
+                        (itemValue) => {
+                            setCategory(itemValue);
+                            setSubCategory('');
+                        }
+                    )}
 
-            {/* CHANGE 2: Wrapped Picker in View container and updated subcategory logic */}
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={subCategory}
-                    style={styles.picker}
-                    enabled={category !== ''} // Only enable if category is selected
-                    onValueChange={(itemValue) => setSubCategory(itemValue)}
-                >
-                    <Picker.Item label="Select Subcategory" value="" />
-                    {category !== '' && // Only show subcategories if category is selected
-                        categories[category].map((subCat) => (
-                            <Picker.Item key={subCat} label={subCat} value={subCat} />
-                        ))}
-                </Picker>
-            </View>
+                    {renderPicker(
+                        category ? categories[category] : [],
+                        "Select Subcategory",
+                        subCategory,
+                        setSubCategory
+                    )}
 
-            <Button 
-                title={dueDate ? `Due Date: ${dueDate}` : 'Select Due Date'} 
-                onPress={() => setShowCalendar(true)} 
-            />
+                    <TouchableOpacity 
+                        style={styles.dateButton}
+                        onPress={() => setShowCalendar(true)}
+                    >
+                        <Text style={styles.dateButtonText}>
+                            {dueDate ? `Due Date: ${dueDate}` : 'Select Due Date'}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <View style={styles.switchContainer}>
+                        <Text style={styles.switchText}>Auto-Pay</Text>
+                        <Switch 
+                            value={isAutoPay} 
+                            onValueChange={setIsAutoPay}
+                            trackColor={{ false: "#767577", true: "#81b0ff" }}
+                            thumbColor={isAutoPay ? "#f5dd4b" : "#f4f3f4"}
+                        />
+                    </View>
+
+                    <TouchableOpacity style={styles.addButton} onPress={addExpense}>
+                        <Text style={styles.addButtonText}>Add Expense</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {expenses.length > 0 && (
+                    <View style={styles.expenseListContainer}>
+                        <Text style={styles.sectionTitle}>Your Expenses</Text>
+                        <FlatList
+                            data={expenses}
+                            keyExtractor={(item, index) => index.toString()}
+                            renderItem={renderExpenseItem}
+                            ItemSeparatorComponent={() => <View style={styles.separator} />}
+                        />
+                    </View>
+                )}
+            </ScrollView>
 
             {showCalendar && (
-                <Calendar
-                    onDayPress={(date) => {
-                        setDueDate(date.dateString);
-                        setShowCalendar(false);
-                    }}
-                    markedDates={dueDate ? { [dueDate]: { selected: true, selectedColor: 'blue' } } : {}}
-                />
+                <Modal transparent={true} animationType="slide">
+                    <View style={styles.calendarModal}>
+                        <Calendar
+                            onDayPress={(date) => {
+                                setDueDate(date.dateString);
+                                setShowCalendar(false);
+                            }}
+                            markedDates={dueDate ? { [dueDate]: { selected: true, selectedColor: 'blue' } } : {}}
+                        />
+                        <TouchableOpacity 
+                            style={styles.closeCalendarButton}
+                            onPress={() => setShowCalendar(false)}
+                        >
+                            <Text style={styles.closeCalendarButtonText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
             )}
-
-            <View style={styles.switchContainer}>
-                <Text>Auto-Pay</Text>
-                <Switch value={isAutoPay} onValueChange={setIsAutoPay} />
-            </View>
-
-            <Button title="Add Expense" onPress={addExpense} />
-
-            <FlatList
-                data={expenses}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={renderExpenseItem}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
 
             <Modal 
                 transparent={true} 
@@ -200,7 +249,10 @@ const BudgetScreen = () => {
                             <Pressable style={styles.modalButtonYes} onPress={deleteExpense}>
                                 <Text style={styles.modalButtonText}>Yes, Delete</Text>
                             </Pressable>
-                            <Pressable style={styles.modalButtonCancel} onPress={() => setModalVisible(false)}>
+                            <Pressable 
+                                style={styles.modalButtonCancel} 
+                                onPress={() => setModalVisible(false)}
+                            >
                                 <Text style={styles.modalButtonText}>Cancel</Text>
                             </Pressable>
                         </View>
@@ -214,116 +266,181 @@ const BudgetScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
         backgroundColor: '#036704',
     },
+    scrollContainer: {
+        padding: 20,
+    },
     largeTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
+        color: '#fff',
         marginBottom: 20,
-        textAlign: 'left',
     },
-    header: {
-        flexDirection: 'row',
+    chartContainer: {
+        height: 180,
+        marginBottom: 13,
+        backgroundColor: '#036704',
+        borderRadius: 0,
+        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
     },
-    chart: {
-        flex: 1,
-        alignSelf: 'flex-start',
+    formContainer: {
+        marginBottom: 20,
     },
     input: {
-        height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10,
-        borderRadius: 5,
-        backgroundColor: 'white', // CHANGE 3: Added for consistency
+        height: 50,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        marginBottom: 15,
+        fontSize: 16,
+        color: '#000',
     },
-    // CHANGE 4: Updated picker styles
     pickerContainer: {
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 5,
-        marginBottom: 10,
-        backgroundColor: 'white',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        marginBottom: 14,
+        overflow: 'hidden',
     },
-    picker: {
+    pickerIOS: {
+        height: 150,
+        width: '100%',
+    },
+    pickerAndroid: {
         height: 50,
         width: '100%',
+        color: '#000',
+    },
+    dateButton: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 15,
+    },
+    dateButtonText: {
+        color: '#000',
+        fontSize: 16,
+        textAlign: 'center',
     },
     switchContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        backgroundColor: '#025703',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 15,
     },
-    // No changes to the rest of the styles
-    separator: {
-        height: 1,
-        backgroundColor: '#CED0CE',
+    switchText: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    addButton: {
+        backgroundColor: '#0056b3',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    addButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    expenseListContainer: {
+        marginTop: 20,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 10,
     },
     item: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 10,
-        backgroundColor: '#fff',
-        borderRadius: 5,
+        backgroundColor: '#025703',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
     },
     itemContent: {
-        flex: 1,
+        marginBottom: 10,
+    },
+    itemText: {
+        color: '#fff',
+        fontSize: 16,
+        marginBottom: 5,
     },
     deleteButton: {
-        backgroundColor: 'red',
+        backgroundColor: '#dc3545',
         padding: 10,
         borderRadius: 5,
+        alignItems: 'center',
     },
     deleteButtonText: {
-        color: 'white',
+        color: '#fff',
         fontWeight: 'bold',
+    },
+    separator: {
+        height: 10,
     },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
-        width: 300,
-        padding: 20,
-        backgroundColor: 'white',
+        backgroundColor: '#fff',
         borderRadius: 10,
-        alignItems: 'center',
+        padding: 20,
+        width: '80%',
     },
     modalText: {
-        marginBottom: 15,
+        fontSize: 18,
+        marginBottom: 20,
         textAlign: 'center',
     },
     modalButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '100%',
     },
     modalButtonYes: {
-        backgroundColor: 'red',
+        backgroundColor: '#dc3545',
         padding: 10,
         borderRadius: 5,
         flex: 1,
-        marginRight: 5,
+        marginRight: 10,
     },
     modalButtonCancel: {
-        backgroundColor: '#ccc',
+        backgroundColor: '#6c757d',
         padding: 10,
         borderRadius: 5,
         flex: 1,
-        marginLeft: 5,
+        marginLeft: 10,
     },
     modalButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
+        color: '#fff',
         textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    calendarModal: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+        marginTop: 'auto',
+    },
+    closeCalendarButton: {
+        backgroundColor: '#0056b3',
+        padding: 15,
+        borderRadius: 10,
+        marginTop: 10,
+    },
+    closeCalendarButtonText: {
+        color: '#fff',
+        textAlign: 'center',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
