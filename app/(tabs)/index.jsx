@@ -1,27 +1,29 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, FlatList } from 'react-native';
+import { Text, View, TextInput, FlatList, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 // Dummy data for demonstration
-const dummyBudget = {
-    total: 1000,
-    spent: 450,
-};
-
 const dummyBills = [
     { id: '1', name: 'Electricity Bill', dueDate: '2024-10-10', status: 'upcoming' },
     { id: '2', name: 'Water Bill', dueDate: '2024-10-01', status: 'past-due' },
 ];
 
 export default function App() {
-    const [budget, setBudget] = useState(dummyBudget);
+    const [totalBudget, setTotalBudget] = useState('');
+    const [spentAmount, setSpentAmount] = useState('');
     const [bills, setBills] = useState(dummyBills);
 
-    // Fetch budget and bills data from API or local storage
-    useEffect(() => {
-        // Fetch budget and bills data here
-    }, []);
+    // Calculate remaining amount
+    const remainingAmount = (parseFloat(totalBudget) || 0) - (parseFloat(spentAmount) || 0);
+
+    const handleTotalBudgetChange = (text) => {
+        setTotalBudget(text);
+    };
+
+    const handleSpentAmountChange = (text) => {
+        setSpentAmount(text);
+    };
 
     const renderBillItem = ({ item }) => (
         <View style={styles.billItem}>
@@ -39,9 +41,21 @@ export default function App() {
             {/* Spending Budget Section */}
             <View style={styles.budgetContainer}>
                 <Text style={styles.sectionTitle}>Spending Budget</Text>
-                <Text style={styles.budgetText}>Total Budget: ${budget.total}</Text>
-                <Text style={styles.budgetText}>Amount Spent: ${budget.spent}</Text>
-                <Text style={styles.budgetText}>Amount Left: ${budget.total - budget.spent}</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Enter Total Budget"
+                    keyboardType="numeric"
+                    value={totalBudget}
+                    onChangeText={handleTotalBudgetChange}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Enter Amount Spent"
+                    keyboardType="numeric"
+                    value={spentAmount}
+                    onChangeText={handleSpentAmountChange}
+                />
+                <Text style={styles.budgetText}>Amount Left: ${remainingAmount.toFixed(2)}</Text>
             </View>
 
             {/* Bill Reminders Section */}
@@ -57,7 +71,7 @@ export default function App() {
     );
 }
 
-const styles = {
+const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
@@ -86,6 +100,15 @@ const styles = {
         fontWeight: 'bold',
         marginBottom: 10,
     },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+        borderRadius: 5,
+        backgroundColor: '#fff',
+    },
     budgetText: {
         fontSize: 16,
         marginBottom: 5,
@@ -106,4 +129,4 @@ const styles = {
         color: 'red',
         fontWeight: 'bold',
     },
-};
+});
