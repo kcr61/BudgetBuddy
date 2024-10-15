@@ -38,8 +38,8 @@ const CircularChart = ({ data }) => {
       name: `${expense.name}: $${expense.value.toFixed(2)} (${percentage}%)`, 
       amount: expense.value,                                               
       color: categoryColors[expense.name] || '#999999', 
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
+      legendFontColor: "#036704",
+      legendFontSize: 12,
     };
   });
 
@@ -47,20 +47,20 @@ const CircularChart = ({ data }) => {
     <View>
       <PieChart
         data={chartData} 
-        width={600}
-        height={220}
+        width={360}
+        height={150}
         chartConfig={{
-          backgroundColor: "#ffffff",
-          backgroundGradientFrom: "#ffffff",
-          backgroundGradientTo: "#ffffff",
+          backgroundColor: "#036704",
+          backgroundGradientFrom: "#036704",
+          backgroundGradientTo: "#036704",
           decimalPlaces: 2,
           color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
           style: {
-            borderRadius: 16
+            borderRadius: 0
           }
         }}
         accessor="amount" 
-        paddingLeft="15"
+        paddingLeft="0"
         center={[10, 10]}
         absolute
       />
