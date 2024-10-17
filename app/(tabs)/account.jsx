@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, Modal, Pressable, Keyboard } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, Modal, Pressable, Keyboard, ScrollView } from 'react-native';
 
 const Account = () => {
-  //Emergency Fund Tracker
   const [goal, setGoal] = useState('');
   const [currentSavings, setCurrentSavings] = useState('');
   const [progress, setProgress] = useState(0);
-//Investment Tracker
+
   const [investmentName, setInvestmentName] = useState('');
   const [investmentAmount, setInvestmentAmount] = useState('');
   const [investments, setInvestments] = useState([]);
-//Yearly Report
+
   const [yearlyIncome, setYearlyIncome] = useState('');
   const [yearlyExpenses, setYearlyExpenses] = useState('');
   const [yearlyReport, setYearlyReport] = useState('');
@@ -21,7 +20,7 @@ const Account = () => {
   const handleCalculateProgress = () => {
     const goalValue = parseFloat(goal);
     const currentSavingsValue = parseFloat(currentSavings);
-//Validate input values
+
     if (isNaN(goalValue) || isNaN(currentSavingsValue)) {
       console.error('Please enter valid numbers for goal and current savings.');
       return;
@@ -67,7 +66,7 @@ const Account = () => {
 
     if (!isNaN(income) && !isNaN(expenses)) {
       const report = income - expenses;
-      setYearlyReport(`Net savings for the year: $${report.toFixed(2)}`);
+      setYearlyReport(`Your net savings for the year: $${report.toFixed(2)}`);
     } else {
       console.error('Please enter valid yearly income and expenses.');
       setYearlyReport('');
@@ -75,171 +74,172 @@ const Account = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Emergency Fund Tracker</Text>
-      <View style={styles.row}>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Emergency Fund Tracker</Text>
         <TextInput
-          style={styles.inputSmall}
-          placeholder="Goal"
+          style={styles.input}
+          placeholder="Enter your goal amount"
           keyboardType="numeric"
           value={goal}
           onChangeText={setGoal}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
+          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
         />
         <TextInput
-          style={styles.inputSmall}
-          placeholder="Current"
+          style={styles.input}
+          placeholder="Enter current savings"
           keyboardType="numeric"
           value={currentSavings}
           onChangeText={setCurrentSavings}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
+          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
         />
-        <Pressable style={styles.smallButton} onPress={handleCalculateProgress}>
-          <Text style={styles.smallButtonText}>Calc</Text>
+        <Pressable style={styles.button} onPress={handleCalculateProgress}>
+          <Text style={styles.buttonText}>Calculate Progress</Text>
         </Pressable>
-      </View>
-      <Text style={styles.result}>Progress: {progress}%</Text>
+        <Text style={styles.result}>
+          Progress towards goal: {progress}%
+        </Text>
 
-      <Text style={styles.title}>Investment Tracker</Text>
-      <View style={styles.row}>
+        <Text style={styles.title}>Investment Tracker</Text>
         <TextInput
-          style={styles.inputSmall}
-          placeholder="Investment"
+          style={styles.input}
+          placeholder="Enter investment name"
           value={investmentName}
           onChangeText={setInvestmentName}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
+          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
         />
         <TextInput
-          style={styles.inputSmall}
-          placeholder="Amount"
+          style={styles.input}
+          placeholder="Enter investment amount"
           keyboardType="numeric"
           value={investmentAmount}
           onChangeText={setInvestmentAmount}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
+          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
         />
-        <Pressable style={styles.smallButton} onPress={handleAddInvestment}>
-          <Text style={styles.smallButtonText}>Add</Text>
+        <Pressable style={styles.button} onPress={handleAddInvestment}>
+          <Text style={styles.buttonText}>Add Investment</Text>
         </Pressable>
-      </View>
 
-      <FlatList
-        data={investments}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.investmentItem}>
-            <Text>{item.name}: ${item.amount.toFixed(2)}</Text>
-            <Button title="X" onPress={() => openDeleteModal(item.id)} color="red" />
-          </View>
-        )}
-        style={{ maxHeight: 100 }} // Limit height to avoid scrolling
-      />
+        <FlatList
+          data={investments}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.investmentItem}>
+              <Text>{item.name}: ${item.amount.toFixed(2)}</Text>
+              <Button
+                title="Delete"
+                onPress={() => openDeleteModal(item.id)}
+                color="red"
+              />
+            </View>
+          )}
+        />
 
-      <Text style={styles.title}>Yearly Report</Text>
-      <View style={styles.row}>
+        <Text style={styles.title}>Yearly Report</Text>
         <TextInput
-          style={styles.inputSmall}
-          placeholder="Income"
+          style={styles.input}
+          placeholder="Enter yearly income"
           keyboardType="numeric"
           value={yearlyIncome}
           onChangeText={setYearlyIncome}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
+          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
         />
         <TextInput
-          style={styles.inputSmall}
-          placeholder="Expenses"
+          style={styles.input}
+          placeholder="Enter yearly expenses"
           keyboardType="numeric"
           value={yearlyExpenses}
           onChangeText={setYearlyExpenses}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
+          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
         />
-        <Pressable style={styles.smallButton} onPress={handleCalculateYearlyReport}>
-          <Text style={styles.smallButtonText}>Calc</Text>
+        <Pressable style={styles.button} onPress={handleCalculateYearlyReport}>
+          <Text style={styles.buttonText}>Calculate Yearly Report</Text>
         </Pressable>
-      </View>
-      <Text style={styles.result}>{yearlyReport}</Text>
+        <Text style={styles.result}>
+          {yearlyReport}
+        </Text>
 
-      <Modal
-        transparent={true}
-        animationType="slide"
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Are you sure you want to delete this investment?</Text>
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.modalButtonYes} onPress={deleteInvestment}>
-                <Text style={styles.modalButtonText}>Yes</Text>
-              </Pressable>
-              <Pressable style={styles.modalButtonCancel} onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </Pressable>
+        <Modal
+          transparent={true}
+          animationType="slide"
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalText}>Are you sure you want to delete this investment?</Text>
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.modalButtonYes} onPress={deleteInvestment}>
+                  <Text style={styles.modalButtonText}>Yes, Delete</Text>
+                </Pressable>
+                <Pressable style={styles.modalButtonCancel} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollViewContent: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
-    padding: 10,
+    padding: 20,
     backgroundColor: '#036704',
-    justifyContent: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginVertical: 10,
+    marginVertical: 20,
     color: '#fff',
   },
-  inputSmall: {
-    flex: 1,
+  input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 8,
+    padding: 15,
     borderRadius: 8,
-    marginRight: 5,
+    marginBottom: 15,
     backgroundColor: '#fff',
-    fontSize: 14,
+    fontSize: 16,
   },
-  smallButton: {
+  button: {
     backgroundColor: '#4CAF50',
-    padding: 8,
+    padding: 15,
     borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
+    marginVertical: 10,
   },
-  smallButtonText: {
+  buttonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 18,
   },
   result: {
-    marginVertical: 10,
-    fontSize: 16,
+    marginTop: 20,
+    fontSize: 18,
     color: '#fff',
   },
   investmentItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 8,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
     backgroundColor: '#fff',
     borderRadius: 8,
-    marginVertical: 5,
+    marginBottom: 10,
   },
   modalContainer: {
     flex: 1,
@@ -248,18 +248,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
+    width: 300,
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
-    width: 300,
+    alignItems: 'center',
   },
   modalText: {
-    marginBottom: 10,
-    fontSize: 16,
+    marginBottom: 15,
+    fontSize: 18,
+    textAlign: 'center',
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width: '100%',
   },
   modalButtonYes: {
     backgroundColor: '#d9534f',
@@ -277,6 +280,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: '#fff',
+    fontSize: 16,
     textAlign: 'center',
   },
 });
