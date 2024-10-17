@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Switch, TextInput, Button, StyleSheet, Modal, Pressable} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { Link } from 'expo-router';
+import { View, Text, Switch, TextInput, StyleSheet, Modal, Pressable, TouchableOpacity } from 'react-native';
 
 const SettingsScreen = () => {
   // User Preferences
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -18,11 +15,14 @@ const SettingsScreen = () => {
   const [language, setLanguage] = useState('English');
   const [textSize, setTextSize] = useState('Medium');
   const [highContrast, setHighContrast] = useState(false);
-
   const [modalVisible, setModalVisible] = useState(false);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const [textSizeModalVisible, setTextSizeModalVisible] = useState(false);
+
+  const languages = ["English", "Spanish", "French", "German", "Chinese", "Japanese", "Korean", "Russian", "Italian", "Portuguese", "Arabic", "Turkish"];
+  const textSizes = ["Small", "Medium", "Large"];
 
   const handleSaveSettings = () => {
-    // Save settings
     setModalVisible(true);
   };
 
@@ -31,20 +31,11 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}>
-      <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Settings</Text>
-
-      {/* User Preferences */}
-      <View style={styles.switchContainer}>
-        <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Dark Mode</Text>
-        <Switch
-          value={isDarkMode}
-          onValueChange={setIsDarkMode}
-        />
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Settings</Text>
 
       <View style={styles.switchContainer}>
-        <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Enable Notifications</Text>
+        <Text style={styles.textWhite}>Enable Notifications</Text>
         <Switch
           value={notificationsEnabled}
           onValueChange={setNotificationsEnabled}
@@ -54,7 +45,7 @@ const SettingsScreen = () => {
       {notificationsEnabled && (
         <>
           <View style={styles.switchContainer}>
-            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Email Notifications</Text>
+            <Text style={styles.textWhite}>Email Notifications</Text>
             <Switch
               value={emailNotifications}
               onValueChange={setEmailNotifications}
@@ -62,7 +53,7 @@ const SettingsScreen = () => {
           </View>
 
           <View style={styles.switchContainer}>
-            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Push Notifications</Text>
+            <Text style={styles.textWhite}>Push Notifications</Text>
             <Switch
               value={pushNotifications}
               onValueChange={setPushNotifications}
@@ -72,72 +63,78 @@ const SettingsScreen = () => {
       )}
 
       <TextInput
-        style={[styles.input, { color: isDarkMode ? '#fff' : '#000', backgroundColor: isDarkMode ? '#444' : '#eee' }]}
+        style={styles.input}
         placeholder="Username"
         value={username}
         onChangeText={setUsername}
       />
 
       <TextInput
-        style={[styles.input, { color: isDarkMode ? '#fff' : '#000', backgroundColor: isDarkMode ? '#444' : '#eee' }]}
+        style={styles.input}
         placeholder="Bio"
         value={bio}
         onChangeText={setBio}
       />
 
-      <View style={styles.pickerContainer}>
-        <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Language</Text>
-        <Picker
-          selectedValue={language}
-          onValueChange={(itemValue) => setLanguage(itemValue)}
-          style={{ color: isDarkMode ? '#fff' : '#000' }}
-        >
-          <Picker.Item label="English" value="English" />
-          <Picker.Item label="Spanish" value="Spanish" />
-          <Picker.Item label="French" value="French" />
-          <Picker.Item label="German" value="German" />
-          <Picker.Item label="Chinese" value="Chinese (Simplified)" />
-          <Picker.Item label="Japanese" value="Japanese" />
-          <Picker.Item label="Korean" value="Korean" />
-          <Picker.Item label="Russian" value="Russian" />
-          <Picker.Item label="Italian" value="Italian" />
-          <Picker.Item label="Portuguese" value="Portuguese" />
-          <Picker.Item label="Arabic" value="Arabic" />
-          <Picker.Item label="Turkish" value="Turkish" />
-        </Picker>
-      </View>
+      {/* Language Picker */}
+      <TouchableOpacity style={styles.pickerContainer} onPress={() => setLanguageModalVisible(true)}>
+        <Text style={styles.textWhite}>Language: {language}</Text>
+      </TouchableOpacity>
+      
+      <Modal visible={languageModalVisible} transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {languages.map((lang) => (
+              <Pressable key={lang} onPress={() => { setLanguage(lang); setLanguageModalVisible(false); }} style={styles.option}>
+                <Text style={styles.textWhite}>{lang}</Text>
+              </Pressable>
+            ))}
+            <Pressable style={styles.modalButton} onPress={() => setLanguageModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
-      <View style={styles.pickerContainer}>
-        <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Text Size</Text>
-        <Picker
-          selectedValue={textSize}
-          onValueChange={(itemValue) => setTextSize(itemValue)}
-          style={{ color: isDarkMode ? '#fff' : '#000' }}
-        >
-          <Picker.Item label="Small" value="Small" />
-          <Picker.Item label="Medium" value="Medium" />
-          <Picker.Item label="Large" value="Large" />
-        </Picker>
-      </View>
+      {/* Text Size Picker */}
+      <TouchableOpacity style={styles.pickerContainer} onPress={() => setTextSizeModalVisible(true)}>
+        <Text style={styles.textWhite}>Text Size: {textSize}</Text>
+      </TouchableOpacity>
+      
+      <Modal visible={textSizeModalVisible} transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {textSizes.map((size) => (
+              <Pressable key={size} onPress={() => { setTextSize(size); setTextSizeModalVisible(false); }} style={styles.option}>
+                <Text style={styles.textWhite}>{size}</Text>
+              </Pressable>
+            ))}
+            <Pressable style={styles.modalButton} onPress={() => setTextSizeModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.switchContainer}>
-        <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>High Contrast</Text>
+        <Text style={styles.textWhite}>High Contrast</Text>
         <Switch
           value={highContrast}
           onValueChange={setHighContrast}
         />
       </View>
 
-      <Button title="Save Settings" onPress={handleSaveSettings} />
+      {/* Save Settings Button */}
+      <TouchableOpacity style={styles.saveButton} onPress={handleSaveSettings}>
+        <Text style={styles.buttonText}>Save Settings</Text>
+      </TouchableOpacity>
 
-      <Button title="Logout" color="#ff4d4d" onPress={handleLogout} />
+      {/* Logout Button */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
+      </TouchableOpacity>
 
-      {/* New User Profile Link */}
-      <Link href="/profile">
-        <Text style={{ color: 'blue', marginTop: 20 }}>Go to User Profile</Text>
-      </Link>
-
-      {/*Save Confirmation */}
+      {/* Save Confirmation */}
       <Modal
         transparent={true}
         visible={modalVisible}
@@ -166,6 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: 'white',
   },
   input: {
     height: 40,
@@ -173,6 +171,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
+    backgroundColor: '#eee',
+    color: 'black',
   },
   switchContainer: {
     flexDirection: 'row',
@@ -181,6 +181,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerContainer: {
+    padding: 10,
+    backgroundColor: '#555',
+    borderRadius: 5,
     marginBottom: 10,
   },
   modalContainer: {
@@ -191,7 +194,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    backgroundColor: '#fff',
+    backgroundColor: '#333',
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
@@ -199,6 +202,7 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 18,
     marginBottom: 20,
+    color: 'white',
   },
   modalButton: {
     backgroundColor: '#007bff',
@@ -207,6 +211,35 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: '#fff',
+  },
+  textWhite: {
+    color: 'white',
+  },
+  option: {
+    paddingVertical: 20,
+    width: '100%',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#444',
+  },
+  saveButton: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  logoutButton: {
+    backgroundColor: '#ff4d4d',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
