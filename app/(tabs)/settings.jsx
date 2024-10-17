@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, Switch, TextInput, Button, StyleSheet, Modal, Pressable, Picker } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { View, Text, Switch, TextInput, Button, StyleSheet, Modal, Pressable} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { Link } from 'expo-router';
 
 const SettingsScreen = () => {
-  
-
   // User Preferences
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -92,6 +90,7 @@ const SettingsScreen = () => {
         <Picker
           selectedValue={language}
           onValueChange={(itemValue) => setLanguage(itemValue)}
+          style={{ color: isDarkMode ? '#fff' : '#000' }}
         >
           <Picker.Item label="English" value="English" />
           <Picker.Item label="Spanish" value="Spanish" />
@@ -113,6 +112,7 @@ const SettingsScreen = () => {
         <Picker
           selectedValue={textSize}
           onValueChange={(itemValue) => setTextSize(itemValue)}
+          style={{ color: isDarkMode ? '#fff' : '#000' }}
         >
           <Picker.Item label="Small" value="Small" />
           <Picker.Item label="Medium" value="Medium" />
@@ -133,8 +133,9 @@ const SettingsScreen = () => {
       <Button title="Logout" color="#ff4d4d" onPress={handleLogout} />
 
       {/* New User Profile Link */}
-     // <Link href="/profile" style={{ color: 'blue', marginTop: 20 }}>Go to User Profile</Link>
-
+      <Link href="/profile">
+        <Text style={{ color: 'blue', marginTop: 20 }}>Go to User Profile</Text>
+      </Link>
 
       {/*Save Confirmation */}
       <Modal

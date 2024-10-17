@@ -3,6 +3,7 @@ import { Text, View, TextInput, FlatList, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 
+
 // Dummy data for demonstration
 const dummyBills = [
     { id: '1', name: 'Electricity Bill', dueDate: '2024-10-10', status: 'upcoming' },
