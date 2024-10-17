@@ -5,11 +5,11 @@ const Account = () => {
   const [goal, setGoal] = useState('');
   const [currentSavings, setCurrentSavings] = useState('');
   const [progress, setProgress] = useState(0);
-
+// Investment Tracker
   const [investmentName, setInvestmentName] = useState('');
   const [investmentAmount, setInvestmentAmount] = useState('');
   const [investments, setInvestments] = useState([]);
-
+//Yearly Report 
   const [yearlyIncome, setYearlyIncome] = useState('');
   const [yearlyExpenses, setYearlyExpenses] = useState('');
   const [yearlyReport, setYearlyReport] = useState('');
@@ -84,7 +84,7 @@ const Account = () => {
           value={goal}
           onChangeText={setGoal}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
+          onSubmitEditing={() => Keyboard.dismiss()} 
         />
         <TextInput
           style={styles.input}
@@ -93,7 +93,7 @@ const Account = () => {
           value={currentSavings}
           onChangeText={setCurrentSavings}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
+          onSubmitEditing={() => Keyboard.dismiss()} 
         />
         <Pressable style={styles.button} onPress={handleCalculateProgress}>
           <Text style={styles.buttonText}>Calculate Progress</Text>
@@ -118,7 +118,7 @@ const Account = () => {
           value={investmentAmount}
           onChangeText={setInvestmentAmount}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
+          onSubmitEditing={() => Keyboard.dismiss()} 
         />
         <Pressable style={styles.button} onPress={handleAddInvestment}>
           <Text style={styles.buttonText}>Add Investment</Text>
@@ -147,7 +147,7 @@ const Account = () => {
           value={yearlyIncome}
           onChangeText={setYearlyIncome}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
+          onSubmitEditing={() => Keyboard.dismiss()} 
         />
         <TextInput
           style={styles.input}
@@ -156,7 +156,7 @@ const Account = () => {
           value={yearlyExpenses}
           onChangeText={setYearlyExpenses}
           returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()} // Dismiss keyboard on "Done"
+          onSubmitEditing={() => Keyboard.dismiss()} 
         />
         <Pressable style={styles.button} onPress={handleCalculateYearlyReport}>
           <Text style={styles.buttonText}>Calculate Yearly Report</Text>
