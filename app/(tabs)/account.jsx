@@ -1,23 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, Modal, Pressable, Keyboard } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  Button, 
+  ScrollView, 
+  StyleSheet, 
+  Modal, 
+  Pressable, 
+  KeyboardAvoidingView, 
+  Platform, 
+  Keyboard,
+  TouchableWithoutFeedback
+} from 'react-native';
 
 const Account = () => {
   const [goal, setGoal] = useState('');
   const [currentSavings, setCurrentSavings] = useState('');
   const [progress, setProgress] = useState(0);
-  // Investment Tracker
   const [investmentName, setInvestmentName] = useState('');
   const [investmentAmount, setInvestmentAmount] = useState('');
   const [investments, setInvestments] = useState([]);
-  // Yearly Report
   const [yearlyIncome, setYearlyIncome] = useState('');
   const [yearlyExpenses, setYearlyExpenses] = useState('');
   const [yearlyReport, setYearlyReport] = useState('');
-  
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedInvestmentId, setSelectedInvestmentId] = useState(null);
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   const handleCalculateProgress = () => {
+    dismissKeyboard();
     const goalValue = parseFloat(goal);
     const currentSavingsValue = parseFloat(currentSavings);
   
@@ -36,6 +51,7 @@ const Account = () => {
   };
 
   const handleAddInvestment = () => {
+    dismissKeyboard();
     const amount = parseFloat(investmentAmount);
   
     if (investmentName && !isNaN(amount)) {
@@ -49,6 +65,7 @@ const Account = () => {
   };
 
   const openDeleteModal = (id) => {
+    dismissKeyboard();
     setSelectedInvestmentId(id);
     setModalVisible(true);
   };
@@ -61,6 +78,7 @@ const Account = () => {
   };
 
   const handleCalculateYearlyReport = () => {
+    dismissKeyboard();
     const income = parseFloat(yearlyIncome);
     const expenses = parseFloat(yearlyExpenses);
   
@@ -73,133 +91,129 @@ const Account = () => {
     }
   };
 
-  const renderHeader = () => (
-    <View style={styles.container}>
-      <Text style={styles.title}>Emergency Fund Tracker</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your goal amount"
-        keyboardType="numeric"
-        value={goal}
-        onChangeText={setGoal}
-        returnKeyType="done"
-        onSubmitEditing={() => Keyboard.dismiss()}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter current savings"
-        keyboardType="numeric"
-        value={currentSavings}
-        onChangeText={setCurrentSavings}
-        returnKeyType="done"
-        onSubmitEditing={() => Keyboard.dismiss()}
-      />
-      <Pressable style={styles.button} onPress={handleCalculateProgress}>
-        <Text style={styles.buttonText}>Calculate Progress</Text>
-      </Pressable>
-      <Text style={styles.result}>
-        Progress towards goal: {progress}%
-      </Text>
-  
-      <Text style={styles.title}>Investment Tracker</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter investment name"
-        value={investmentName}
-        onChangeText={setInvestmentName}
-        returnKeyType="done"
-        onSubmitEditing={() => Keyboard.dismiss()}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter investment amount"
-        keyboardType="numeric"
-        value={investmentAmount}
-        onChangeText={setInvestmentAmount}
-        returnKeyType="done"
-        onSubmitEditing={() => Keyboard.dismiss()}
-      />
-      <Pressable style={styles.button} onPress={handleAddInvestment}>
-        <Text style={styles.buttonText}>Add Investment</Text>
-      </Pressable>
-    </View>
-  );
-
-  const renderFooter = () => (
-    <View style={styles.container}>
-      <Text style={styles.title}>Yearly Report</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter yearly income"
-        keyboardType="numeric"
-        value={yearlyIncome}
-        onChangeText={setYearlyIncome}
-        returnKeyType="done"
-        onSubmitEditing={() => Keyboard.dismiss()}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter yearly expenses"
-        keyboardType="numeric"
-        value={yearlyExpenses}
-        onChangeText={setYearlyExpenses}
-        returnKeyType="done"
-        onSubmitEditing={() => Keyboard.dismiss()}
-      />
-      <Pressable style={styles.button} onPress={handleCalculateYearlyReport}>
-        <Text style={styles.buttonText}>Calculate Yearly Report</Text>
-      </Pressable>
-      <Text style={styles.result}>
-        {yearlyReport}
-      </Text>
-  
-      <Modal
-        transparent={true}
-        animationType="slide"
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+  return (
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Are you sure you want to delete this investment?</Text>
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.modalButtonYes} onPress={deleteInvestment}>
-                <Text style={styles.modalButtonText}>Yes, Delete</Text>
-              </Pressable>
-              <Pressable style={styles.modalButtonCancel} onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </Pressable>
+        <ScrollView style={styles.scrollViewContent}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Emergency Fund Tracker</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your goal amount"
+              keyboardType="decimal-pad"
+              value={goal}
+              onChangeText={setGoal}
+              returnKeyType="done"
+              onSubmitEditing={dismissKeyboard}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter current savings"
+              keyboardType="decimal-pad"
+              value={currentSavings}
+              onChangeText={setCurrentSavings}
+              returnKeyType="done"
+              onSubmitEditing={dismissKeyboard}
+            />
+            <Pressable style={styles.button} onPress={handleCalculateProgress}>
+              <Text style={styles.buttonText}>Calculate Progress</Text>
+            </Pressable>
+            <Text style={styles.result}>
+              Progress towards goal: {progress}%
+            </Text>
+        
+            <Text style={styles.title}>Investment Tracker</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter investment name"
+              value={investmentName}
+              onChangeText={setInvestmentName}
+              returnKeyType="done"
+              onSubmitEditing={dismissKeyboard}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter investment amount"
+              keyboardType="decimal-pad"
+              value={investmentAmount}
+              onChangeText={setInvestmentAmount}
+              returnKeyType="done"
+              onSubmitEditing={dismissKeyboard}
+            />
+            <Pressable style={styles.button} onPress={handleAddInvestment}>
+              <Text style={styles.buttonText}>Add Investment</Text>
+            </Pressable>
+
+            {investments.map((item) => (
+              <View key={item.id} style={styles.investmentItem}>
+                <Text>{item.name}: ${item.amount.toFixed(2)}</Text>
+                <Button
+                  title="Delete"
+                  onPress={() => openDeleteModal(item.id)}
+                  color="red"
+                />
+              </View>
+            ))}
+
+            <Text style={styles.title}>Yearly Report</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter yearly income"
+              keyboardType="decimal-pad"
+              value={yearlyIncome}
+              onChangeText={setYearlyIncome}
+              returnKeyType="done"
+              onSubmitEditing={dismissKeyboard}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter yearly expenses"
+              keyboardType="decimal-pad"
+              value={yearlyExpenses}
+              onChangeText={setYearlyExpenses}
+              returnKeyType="done"
+              onSubmitEditing={dismissKeyboard}
+            />
+            <Pressable style={styles.button} onPress={handleCalculateYearlyReport}>
+              <Text style={styles.buttonText}>Calculate Yearly Report</Text>
+            </Pressable>
+            <Text style={styles.result}>
+              {yearlyReport}
+            </Text>
+          </View>
+        </ScrollView>
+
+        <Modal
+          transparent={true}
+          animationType="slide"
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalText}>Are you sure you want to delete this investment?</Text>
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.modalButtonYes} onPress={deleteInvestment}>
+                  <Text style={styles.modalButtonText}>Yes, Delete</Text>
+                </Pressable>
+                <Pressable style={styles.modalButtonCancel} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </View>
-  );
-
-  return (
-    <FlatList
-      data={investments}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <View style={styles.investmentItem}>
-          <Text>{item.name}: ${item.amount.toFixed(2)}</Text>
-          <Button
-            title="Delete"
-            onPress={() => openDeleteModal(item.id)}
-            color="red"
-          />
-        </View>
-      )}
-      ListHeaderComponent={renderHeader}
-      ListFooterComponent={renderFooter}
-      contentContainerStyle={styles.scrollViewContent}
-    />
+        </Modal>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
   scrollViewContent: {
-    flexGrow: 1,
+    flex: 1,
   },
   container: {
     flex: 1,
