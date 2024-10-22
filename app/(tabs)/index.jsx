@@ -8,6 +8,8 @@ import { useState } from 'react';
 const dummyBills = [
     { id: '1', name: 'Electricity Bill', dueDate: '2024-10-10', status: 'upcoming' },
     { id: '2', name: 'Water Bill', dueDate: '2024-10-01', status: 'past-due' },
+    { id: '3', name: 'Internet Bill', dueDate: '2024-10-15', status: 'upcoming' },
+    { id: '5', name: 'Rent', dueDate: '2024-10-20', status: 'upcoming' },
 ];
 
 export default function App() {
