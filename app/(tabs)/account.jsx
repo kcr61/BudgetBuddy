@@ -41,7 +41,12 @@ const Account = () => {
     }
   };
 
-  const handleCalculateProgress = () => {
+  // TODO(For John) -- The EF, It, and YR save under seperate users in the database, fix that
+
+  // NOTE -- Function called for calculating emergency fund progress
+  const handleCalculateProgress = async(e) => {
+    e.preventDefault();
+
     dismissKeyboard();
     const goalValue = parseFloat(goal);
     const currentSavingsValue = parseFloat(currentSavings);
@@ -58,9 +63,38 @@ const Account = () => {
       console.error('Goal must be greater than zero.');
       setProgress(0);
     }
+
+    const emergencyFund = { 
+      goal,
+      currentSavings
+    };
+
+    try {
+      const response = await fetch("http://localhost:3000/api/account/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(emergencyFund),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log("Emergency Fund Updated");
+    alert("Emergency Fund successfully updated!");
+
+    } catch (error) {
+    console.error("Error updating Emergency Fund:", error);
+    alert("There was an error updating the emergency fund.");
+    }
   };
 
-  const handleAddInvestment = () => {
+  // NOTE -- Function called for adding investment
+  const handleAddInvestment = async(e) => {
+    e.preventDefault();
+
     dismissKeyboard();
     const amount = parseFloat(investmentAmount);
   
@@ -71,6 +105,32 @@ const Account = () => {
       setInvestmentAmount('');
     } else {
       console.error('Please enter a valid investment name and amount.');
+    }
+
+    const investment = { 
+      investmentName,
+      investmentAmount
+    };
+
+    try {
+      const response = await fetch("http://localhost:3000/api/account/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(investment),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log("Investment Tracker Updated");
+    alert("Investment Tracker successfully updated!");
+
+    } catch (error) {
+    console.error("Error updating Investment Tracker:", error);
+    alert("There was an error updating the investment tracker.");
     }
   };
 
@@ -86,8 +146,10 @@ const Account = () => {
     setModalVisible(false);
     setSelectedInvestmentId(null);
   };
+  // NOTE -- Function called for the Yearly Report Button
+  const handleCalculateYearlyReport = async(e) => {
+    e.preventDefault();
 
-  const handleCalculateYearlyReport = () => {
     dismissKeyboard();
     const income = parseFloat(yearlyIncome);
     const expenses = parseFloat(yearlyExpenses);
@@ -98,6 +160,32 @@ const Account = () => {
     } else {
       console.error('Please enter valid yearly income and expenses.');
       setYearlyReport('');
+    }
+
+    const yearlyReports = { 
+      yearlyIncome,
+      yearlyExpenses
+    };
+
+    try {
+      const response = await fetch("http://localhost:3000/api/account/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(yearlyReports),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log("Yearly Report Updated");
+    alert("Yearly Report successfully updated!");
+
+    } catch (error) {
+    console.error("Error updating Yearly Report:", error);
+    alert("There was an error updating the yearly report.");
     }
   };
 
@@ -127,6 +215,7 @@ const Account = () => {
             returnKeyType="done"
             onSubmitEditing={() => handleInputSubmit()}
           />
+          {/* NOTE -- Emergency Fund button */}
           <Pressable style={styles.button} onPress={handleCalculateProgress}>
             <Text style={styles.buttonText}>Calculate Progress</Text>
           </Pressable>
@@ -152,6 +241,7 @@ const Account = () => {
             returnKeyType="done"
             onSubmitEditing={() => handleInputSubmit()}
           />
+          {/* NOTE -- The Add Investment button */}
           <Pressable style={styles.button} onPress={handleAddInvestment}>
             <Text style={styles.buttonText}>Add Investment</Text>
           </Pressable>
@@ -186,6 +276,7 @@ const Account = () => {
             returnKeyType="done"
             onSubmitEditing={() => handleInputSubmit()}
           />
+          {/* NOTE -- Calculating the yearly report button */}
           <Pressable style={styles.button} onPress={handleCalculateYearlyReport}>
             <Text style={styles.buttonText}>Calculate Yearly Report</Text>
           </Pressable>

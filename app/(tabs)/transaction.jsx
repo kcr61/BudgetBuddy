@@ -69,7 +69,10 @@ const BudgetScreen = () => {
         );
     };
 
-    const addExpense = () => {
+    // NOTE -- Basically the 'click' variable
+    const addExpense = async(e) => {
+        e.preventDefault();
+
         const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
         if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate && category && subCategory) {
             setExpenses([...expenses, { 
@@ -84,6 +87,37 @@ const BudgetScreen = () => {
         } else {
             alert('Please enter valid expense details, select a category and subcategory, and choose a due date.');
         }
+
+        // Include dueDate in the budgets object
+        const transactions = { 
+            expenseName, 
+            expenseAmount: parseFloat(cleanedAmount), 
+            category,
+            subCategory,
+            dueDate, // Add dueDate here
+            isAutoPay 
+        };
+    
+      try {
+        const response = await fetch("http://localhost:3000/api/transaction/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(transactions),
+        });
+    
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    
+        console.log("New Transaction added");
+        alert("Transaction added successfully!");
+    
+      } catch (error) {
+        console.error("Error adding Transaction:", error);
+        alert("There was an error adding the transaction.");
+      }
     };
 
     const resetForm = () => {
@@ -198,7 +232,7 @@ const BudgetScreen = () => {
                             thumbColor={isAutoPay ? "#f5dd4b" : "#f4f3f4"}
                         />
                     </View>
-
+                    {/* NOTE -- The function(addExpense) that executes when the button is pressed */}
                     <TouchableOpacity style={styles.addButton} onPress={addExpense}>
                         <Text style={styles.addButtonText}>Add Expense</Text>
                     </TouchableOpacity>

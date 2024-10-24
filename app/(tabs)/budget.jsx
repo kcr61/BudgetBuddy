@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, TouchableOpacity, Switch, Modal, Pressable } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { useState } from 'react';
 
 class BudgetScreen extends React.Component {
   constructor(props) {
@@ -22,9 +23,12 @@ class BudgetScreen extends React.Component {
     };
   }
 
-  addExpense = () => {
+  addExpense = async (e) => {
+    e.preventDefault();
+  
     const { expenseName, expenseAmount, dueDate, isAutoPay, expenses } = this.state;
     const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
+  
     if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate) {
       this.setState({
         expenses: [...expenses, { 
@@ -35,14 +39,43 @@ class BudgetScreen extends React.Component {
         }],
         expenseName: '',
         expenseAmount: '',
-        dueDate: null,
+        dueDate: '',
         isAutoPay: false
       });
     } else {
       alert('Please enter valid expense details and select a due date.');
     }
+    
+    // Include dueDate in the budgets object
+    const budgets = { 
+      expenseName, 
+      expenseAmount: parseFloat(cleanedAmount), 
+      dueDate, // Add dueDate here
+      isAutoPay 
+    };
+  
+    try {
+      const response = await fetch("http://localhost:3000/api/budget/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(budgets),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      console.log("New Expense added");
+      alert("Expense added successfully!");
+  
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      alert("There was an error adding the expense.");
+    }
   };
-
+  
   confirmDeleteExpense = (index) => {
     this.setState({ deleteIndex: index, modalVisible: true });
   };
@@ -143,7 +176,7 @@ class BudgetScreen extends React.Component {
             onValueChange={(value) => this.setState({ isAutoPay: value })}
           />
         </View>
-
+        {/* NOTE -- This is the Button Press function call */}
         <Button title="Add Expense" onPress={this.addExpense} />
 
         <FlatList
