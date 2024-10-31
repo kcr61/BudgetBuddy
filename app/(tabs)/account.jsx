@@ -70,7 +70,7 @@ const Account = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:3000/api/account/save", {
+      const response = await fetch("http://172.20.10.3:3000/api/account/save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -113,7 +113,7 @@ const Account = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:3000/api/account/save", {
+      const response = await fetch("http://172.20.10.3:3000/api/account/save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -168,7 +168,7 @@ const Account = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:3000/api/account/save", {
+      const response = await fetch("http://172.20.10.3:3000/api/account/save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

@@ -1,18 +1,74 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 
 const SignInSignUpScreen = ({ onAuthSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [age, setAge] = useState('');
+  const [username, setUsername] = useState('');
 
-  const handleAuth = () => {
-    onAuthSuccess();
+  const handleAuth = async () => {
+    if (isSignUp) {
+      // Validation for sign up
+      if (!email || !password || !firstName || !lastName || !age || !username) {
+        Alert.alert("Error", "Please fill in all fields.");
+        return;
+      }
+
+      const user = {
+        first_name: firstName,
+        last_name: lastName,
+        age: parseInt(age),
+        username,
+        email,
+        password
+      };
+
+      try {
+        const response = await fetch("http://localhost:3000/api/user/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(user),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        Alert.alert("Success", "User registered successfully!");
+        onAuthSuccess();
+
+        // Reset form fields
+        setFirstName("");
+        setLastName("");
+        setAge("");
+        setUsername("");
+        setEmail("");
+        setPassword("");
+
+      } catch (error) {
+        console.error("Error registering user:", error);
+        Alert.alert("Error", "There was an error registering the user.");
+      }
+    } else {
+      // Handle sign in
+      if (!email || !password) {
+        Alert.alert("Error", "Please enter both email and password.");
+        return;
+      }
+      onAuthSuccess();
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{isSignUp ? 'Sign Up' : 'Sign In'}</Text>
+      
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -26,6 +82,37 @@ const SignInSignUpScreen = ({ onAuthSuccess }) => {
         onChangeText={setPassword}
         secureTextEntry
       />
+
+      {isSignUp && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="First Name"
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Last Name"
+            value={lastName}
+            onChangeText={setLastName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Age"
+            value={age}
+            onChangeText={setAge}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            value={username}
+            onChangeText={setUsername}
+          />
+        </>
+      )}
+
       <Button title={isSignUp ? 'Sign Up' : 'Sign In'} onPress={handleAuth} />
       <Button
         title={isSignUp ? 'Switch to Sign In' : 'Switch to Sign Up'}
@@ -47,7 +134,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 24,
-    color: '#333',
+    color: '#fff',
   },
   input: {
     height: 50,
