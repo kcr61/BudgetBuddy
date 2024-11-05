@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const SignInSignUpScreen = ({ onAuthSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -9,6 +10,45 @@ const SignInSignUpScreen = ({ onAuthSuccess }) => {
   const [lastName, setLastName] = useState('');
   const [age, setAge] = useState('');
   const [username, setUsername] = useState('');
+
+  // Trigger Face ID 
+  useEffect(() => {
+    if (!isSignUp) {
+      handleFaceIDAuth();
+    }
+  }, [isSignUp]);
+
+  const handleFaceIDAuth = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      if (!hasHardware) {
+        Alert.alert("Error", "Face ID is not supported on this device.");
+        return;
+      }
+
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!isEnrolled) {
+        Alert.alert("Error", "No Face ID or biometric enrolled.");
+        return;
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Please authenticate to sign in",
+        fallbackLabel: "Use Passcode",
+        disableDeviceFallback: false,
+      });
+
+      if (result.success) {
+        Alert.alert("Success", "Authentication Successful!");
+        onAuthSuccess();
+      } else {
+        Alert.alert("Authentication Failed", "Please try again.");
+      }
+    } catch (error) {
+      console.error("Error with Face ID authentication:", error);
+      Alert.alert("Error", "An error occurred with Face ID authentication.");
+    }
+  };
 
   const handleAuth = async () => {
     if (isSignUp) {
@@ -24,15 +64,13 @@ const SignInSignUpScreen = ({ onAuthSuccess }) => {
         age: parseInt(age),
         username,
         email,
-        password
+        password,
       };
 
       try {
         const response = await fetch("http://localhost:3000/api/user/save", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(user),
         });
 
@@ -43,14 +81,12 @@ const SignInSignUpScreen = ({ onAuthSuccess }) => {
         Alert.alert("Success", "User registered successfully!");
         onAuthSuccess();
 
-        // Reset form fields
         setFirstName("");
         setLastName("");
         setAge("");
         setUsername("");
         setEmail("");
         setPassword("");
-
       } catch (error) {
         console.error("Error registering user:", error);
         Alert.alert("Error", "There was an error registering the user.");
@@ -61,7 +97,7 @@ const SignInSignUpScreen = ({ onAuthSuccess }) => {
         Alert.alert("Error", "Please enter both email and password.");
         return;
       }
-      onAuthSuccess();
+      handleFaceIDAuth();
     }
   };
 
