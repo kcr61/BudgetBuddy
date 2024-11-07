@@ -47,7 +47,7 @@ const CircularChart = ({ data }) => {
     <View style={{ backgroundColor: 'transparent' }}>
       <PieChart
         data={chartData}
-        width={360}
+        width={260}
         height={150}
         chartConfig={{
           color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,

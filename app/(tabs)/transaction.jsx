@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { 
     View, 
     Text, 
@@ -16,10 +16,9 @@ import {
 import { Calendar } from 'react-native-calendars';
 import { Picker } from '@react-native-picker/picker';
 import CircularChart from '../../compents/PieChart.jsx';
-import useBudgetStore from '../budgetState';
 
 const BudgetScreen = () => {
-    // Local form state
+    const [expenses, setExpenses] = useState([]);
     const [expenseName, setExpenseName] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
     const [category, setCategory] = useState('');
@@ -29,11 +28,6 @@ const BudgetScreen = () => {
     const [showCalendar, setShowCalendar] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
-
-    // Access store state and actions using individual selectors
-    const expenses = useBudgetStore((state) => state.expenses);
-    const addToStore = useBudgetStore((state) => state.addExpense);
-    const deleteFromStore = useBudgetStore((state) => state.deleteExpense);
 
     const categories = {
         Bills: ['Rent', 'Utilities', 'Internet'],
@@ -58,86 +52,7 @@ const BudgetScreen = () => {
         Miscellaneous: '#008080',
     };
 
-    const resetForm = useCallback(() => {
-        setExpenseName('');
-        setExpenseAmount('');
-        setCategory('');
-        setSubCategory('');
-        setDueDate(null);
-        setIsAutoPay(false);
-    }, []);
-
-    const addExpense = useCallback(async(e) => {
-        e.preventDefault();
-    
-        const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
-        if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate && category && subCategory) {
-            const newExpense = { 
-                id: Date.now().toString(),
-                name: expenseName, 
-                amount: parseFloat(cleanedAmount),
-                dueDate: dueDate,
-                category: category,
-                subCategory: subCategory,
-                isAutoPay: isAutoPay 
-            };
-    
-            try {
-                // Add to store first
-                addToStore(newExpense);
-                
-                // Then make API call
-                const response = await fetch("http://172.20.10.3:3000/api/transaction/save", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(newExpense),
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-    
-                // Reset form only after successful API call
-                resetForm();
-                
-                console.log("New Transaction added");
-                alert("Transaction added successfully!");
-    
-            } catch (error) {
-                console.error("Error adding Transaction:", error);
-                alert("There was an error adding the transaction.");
-            }
-        } else {
-            alert('Please enter valid expense details, select a category and subcategory, and choose a due date.');
-        }
-    }, [expenseName, expenseAmount, category, subCategory, dueDate, isAutoPay, addToStore, resetForm]);
-
-    const deleteExpense = useCallback(() => {
-        if (deleteIndex !== null && expenses[deleteIndex]) {
-            const expenseToDelete = expenses[deleteIndex];
-            deleteFromStore(expenseToDelete.id);
-            setModalVisible(false);
-            setDeleteIndex(null);
-        }
-    }, [deleteIndex, expenses, deleteFromStore]);
-
-    const calculateCategoryTotals = useCallback(() => {
-        const categoryTotals = {};
-        Object.keys(categories).forEach(cat => categoryTotals[cat] = 0);
-        expenses.forEach(expense => {
-            if (categoryTotals[expense.category] !== undefined) {
-                categoryTotals[expense.category] += expense.amount;
-            }
-        });
-        return Object.entries(categoryTotals).map(([name, value]) => ({
-            name,
-            value
-        }));
-    }, [expenses, categories]);
-
-    const renderPicker = useCallback((items, placeholder, value, onValueChange) => {
+    const renderPicker = (items, placeholder, value, onValueChange) => {
         return (
             <View style={styles.pickerContainer}>
                 <Picker
@@ -152,9 +67,89 @@ const BudgetScreen = () => {
                 </Picker>
             </View>
         );
-    }, []);
+    };
 
-    const renderExpenseItem = useCallback(({ item, index }) => (
+    // NOTE -- Basically the 'click' variable
+    const addExpense = async(e) => {
+        e.preventDefault();
+
+        const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
+        if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate && category && subCategory) {
+            setExpenses([...expenses, { 
+                name: expenseName, 
+                amount: parseFloat(cleanedAmount),
+                dueDate: dueDate,
+                category: category,
+                subCategory: subCategory,
+                isAutoPay: isAutoPay 
+            }]);
+            resetForm();
+        } else {
+            alert('Please enter valid expense details, select a category and subcategory, and choose a due date.');
+        }
+
+        // Include dueDate in the budgets object
+        const transactions = { 
+            expenseName, 
+            expenseAmount: parseFloat(cleanedAmount), 
+            category,
+            subCategory,
+            dueDate, // Add dueDate here
+            isAutoPay 
+        };
+    
+      try {
+        const response = await fetch("http://172.20.10.3:3000/api/transaction/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(transactions),
+        });
+    
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    
+        console.log("New Transaction added");
+        alert("Transaction added successfully!");
+    
+      } catch (error) {
+        console.error("Error adding Transaction:", error);
+        alert("There was an error adding the transaction.");
+      }
+    };
+
+    const resetForm = () => {
+        setExpenseName('');
+        setExpenseAmount('');
+        setCategory('');
+        setSubCategory('');
+        setDueDate(null);
+        setIsAutoPay(false);
+    };
+
+    const deleteExpense = () => {
+        const updatedExpenses = expenses.filter((_, i) => i !== deleteIndex);
+        setExpenses(updatedExpenses);
+        setModalVisible(false);
+    };
+
+    const calculateCategoryTotals = () => {
+        const categoryTotals = {};
+        Object.keys(categories).forEach(cat => categoryTotals[cat] = 0);
+        expenses.forEach(expense => {
+            if (categoryTotals[expense.category] !== undefined) {
+                categoryTotals[expense.category] += expense.amount;
+            }
+        });
+        return Object.entries(categoryTotals).map(([name, value]) => ({
+            name,
+            value
+        }));
+    };
+
+    const renderExpenseItem = ({ item, index }) => (
         <View style={styles.item}>
             <View style={styles.itemContent}>
                 <Text style={styles.itemText}>{item.name}</Text>
@@ -174,7 +169,7 @@ const BudgetScreen = () => {
                 <Text style={styles.deleteButtonText}>Delete</Text>
             </TouchableOpacity>
         </View>
-    ), []);
+    );
 
     return (
         <SafeAreaView style={styles.container}>
@@ -237,7 +232,7 @@ const BudgetScreen = () => {
                             thumbColor={isAutoPay ? "#f5dd4b" : "#f4f3f4"}
                         />
                     </View>
-
+                    {/* NOTE -- The function(addExpense) that executes when the button is pressed */}
                     <TouchableOpacity style={styles.addButton} onPress={addExpense}>
                         <Text style={styles.addButtonText}>Add Expense</Text>
                     </TouchableOpacity>
@@ -248,7 +243,7 @@ const BudgetScreen = () => {
                         <Text style={styles.sectionTitle}>Your Expenses</Text>
                         <FlatList
                             data={expenses}
-                            keyExtractor={(item) => item.id}
+                            keyExtractor={(item, index) => index.toString()}
                             renderItem={renderExpenseItem}
                             ItemSeparatorComponent={() => <View style={styles.separator} />}
                         />
@@ -319,8 +314,8 @@ const styles = StyleSheet.create({
     chartContainer: {
         height: 180,
         marginBottom: 13,
-        backgroundColor: 'transparent',
-        
+        backgroundColor: '#036704',
+        borderRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
     },
