@@ -18,7 +18,7 @@ import CircularChart from '../../compents/PieChart.jsx';
 import useBudgetStore from '../budgetState';
 
 const BudgetScreen = () => {
-    // Local form state
+     // Local form state
     const [expenseName, setExpenseName] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
     const [category, setCategory] = useState('');
@@ -31,7 +31,7 @@ const BudgetScreen = () => {
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [subCategoryModalVisible, setSubCategoryModalVisible] = useState(false);
 
-    // Access store state and actions using individual selectors
+ // Access store state and actions using individual selectors
     const expenses = useBudgetStore((state) => state.expenses);
     const addToStore = useBudgetStore((state) => state.addExpense);
     const deleteFromStore = useBudgetStore((state) => state.deleteExpense);
@@ -68,7 +68,7 @@ const BudgetScreen = () => {
             };
     
             try {
-                // Add to store first
+                //Add to store first
                 addToStore(newExpense);
                 
                 // Then make API call
@@ -84,7 +84,6 @@ const BudgetScreen = () => {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
     
-                // Reset form only after successful API call
                 resetForm();
                 
                 console.log("New Transaction added");
@@ -169,8 +168,7 @@ const BudgetScreen = () => {
                         onChangeText={setExpenseAmount}
                         placeholderTextColor="#666" 
                     />
-                    
-                    {/* Category Selection */}
+                       {/* Category Selection */}
                     <TouchableOpacity 
                         style={styles.pickerContainer} 
                         onPress={() => setCategoryModalVisible(true)}
@@ -199,8 +197,7 @@ const BudgetScreen = () => {
                             </View>
                         </View>
                     </Modal>
-
-                    {/* Subcategory Selection */}
+                      {/* Subcategory Selection */}
                     <TouchableOpacity 
                         style={styles.pickerContainer} 
                         onPress={() => setSubCategoryModalVisible(true)}
@@ -270,6 +267,7 @@ const BudgetScreen = () => {
             {showCalendar && (
                 <Modal transparent={true} animationType="slide">
                     <View style={styles.calendarModal}>
+                    <View style={styles.calendarContainer}>
                         <Calendar
                             onDayPress={(date) => {
                                 setDueDate(date.dateString);
@@ -283,6 +281,7 @@ const BudgetScreen = () => {
                         >
                             <Text style={styles.closeCalendarButtonText}>Close</Text>
                         </TouchableOpacity>
+                    </View>
                     </View>
                 </Modal>
             )}
@@ -331,7 +330,6 @@ const styles = StyleSheet.create({
         height: 180,
         marginBottom: 13,
         backgroundColor: 'transparent',
-        
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -455,6 +453,30 @@ const styles = StyleSheet.create({
     },
     separator: {
         height: 10,
+    },
+
+    calendarModal: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    calendarContainer: {
+        width: '90%', 
+        maxWidth: 400, 
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 10,
+    },
+    closeCalendarButton: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#007bff',
+        borderRadius: 5,
+    },
+    closeCalendarButtonText: {
+        color: '#fff',
+        fontSize: 16,
     },
 });
 
