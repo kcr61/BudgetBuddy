@@ -14,7 +14,6 @@ import {
     Platform
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { Picker } from '@react-native-picker/picker';
 import CircularChart from '../../compents/PieChart.jsx';
 
 const BudgetScreen = () => {
@@ -28,6 +27,8 @@ const BudgetScreen = () => {
     const [showCalendar, setShowCalendar] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
+    const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+    const [subCategoryModalVisible, setSubCategoryModalVisible] = useState(false);
 
     const categories = {
         Bills: ['Rent', 'Utilities', 'Internet'],
@@ -196,23 +197,64 @@ const BudgetScreen = () => {
                         onChangeText={setExpenseAmount}
                         placeholderTextColor="#666" 
                     />
-                    
-                    {renderPicker(
-                        Object.keys(categories),
-                        "Select Category",
-                        category,
-                        (itemValue) => {
-                            setCategory(itemValue);
-                            setSubCategory('');
-                        }
-                    )}
-
-                    {renderPicker(
-                        category ? categories[category] : [],
-                        "Select Subcategory",
-                        subCategory,
-                        setSubCategory
-                    )}
+                       {/* Category Selection */}
+                    <TouchableOpacity 
+                        style={styles.pickerContainer} 
+                        onPress={() => setCategoryModalVisible(true)}
+                    >
+                        <Text style={styles.textWhite}>{category || 'Select Category'}</Text>
+                    </TouchableOpacity>
+                    <Modal visible={categoryModalVisible} transparent={true}>
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalContent}>
+                                {Object.keys(categories).map((cat) => (
+                                    <Pressable
+                                        key={cat}
+                                        onPress={() => {
+                                            setCategory(cat);
+                                            setSubCategory('');
+                                            setCategoryModalVisible(false);
+                                        }}
+                                        style={styles.option}
+                                    >
+                                        <Text style={styles.textWhite}>{cat}</Text>
+                                    </Pressable>
+                                ))}
+                                <Pressable style={styles.modalButton} onPress={() => setCategoryModalVisible(false)}>
+                                    <Text style={styles.modalButtonText}>Close</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </Modal>
+                      {/* Subcategory Selection */}
+                    <TouchableOpacity 
+                        style={styles.pickerContainer} 
+                        onPress={() => setSubCategoryModalVisible(true)}
+                        disabled={!category}
+                    >
+                        <Text style={styles.textWhite}>{subCategory || 'Select Subcategory'}</Text>
+                    </TouchableOpacity>
+                    <Modal visible={subCategoryModalVisible} transparent={true}>
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalContent}>
+                                {(categories[category] || []).map((subCat) => (
+                                    <Pressable
+                                        key={subCat}
+                                        onPress={() => {
+                                            setSubCategory(subCat);
+                                            setSubCategoryModalVisible(false);
+                                        }}
+                                        style={styles.option}
+                                    >
+                                        <Text style={styles.textWhite}>{subCat}</Text>
+                                    </Pressable>
+                                ))}
+                                <Pressable style={styles.modalButton} onPress={() => setSubCategoryModalVisible(false)}>
+                                    <Text style={styles.modalButtonText}>Close</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </Modal>
 
                     <TouchableOpacity 
                         style={styles.dateButton}
@@ -254,6 +296,7 @@ const BudgetScreen = () => {
             {showCalendar && (
                 <Modal transparent={true} animationType="slide">
                     <View style={styles.calendarModal}>
+                    <View style={styles.calendarContainer}>
                         <Calendar
                             onDayPress={(date) => {
                                 setDueDate(date.dateString);
@@ -267,6 +310,7 @@ const BudgetScreen = () => {
                         >
                             <Text style={styles.closeCalendarButtonText}>Close</Text>
                         </TouchableOpacity>
+                    </View>
                     </View>
                 </Modal>
             )}
@@ -314,8 +358,7 @@ const styles = StyleSheet.create({
     chartContainer: {
         height: 180,
         marginBottom: 13,
-        backgroundColor: '#036704',
-        borderRadius: 0,
+        backgroundColor: 'transparent',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -332,19 +375,42 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     pickerContainer: {
-        backgroundColor: '#fff',
+        padding: 10,
+        backgroundColor: '#555',
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#333',
+        padding: 20,
         borderRadius: 10,
-        marginBottom: 14,
-        overflow: 'hidden',
+        alignItems: 'center',
     },
-    pickerIOS: {
-        height: 150,
-        width: '100%',
+    textWhite: {
+        color: 'white',
     },
-    pickerAndroid: {
-        height: 50,
+    option: {
+        paddingVertical: 15,
         width: '100%',
-        color: '#000',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#444',
+    },
+    modalButton: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    modalButtonText: {
+        color: '#fff',
     },
     dateButton: {
         backgroundColor: '#fff',
@@ -417,64 +483,29 @@ const styles = StyleSheet.create({
     separator: {
         height: 10,
     },
-    modalContainer: {
+
+    calendarModal: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
     },
-    modalContent: {
+    calendarContainer: {
+        width: '90%', 
+        maxWidth: 400, 
         backgroundColor: '#fff',
         borderRadius: 10,
-        padding: 20,
-        width: '80%',
-    },
-    modalText: {
-        fontSize: 18,
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    modalButtonYes: {
-        backgroundColor: '#dc3545',
         padding: 10,
-        borderRadius: 5,
-        flex: 1,
-        marginRight: 10,
-    },
-    modalButtonCancel: {
-        backgroundColor: '#6c757d',
-        padding: 10,
-        borderRadius: 5,
-        flex: 1,
-        marginLeft: 10,
-    },
-    modalButtonText: {
-        color: '#fff',
-        textAlign: 'center',
-        fontWeight: 'bold',
-    },
-    calendarModal: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        marginTop: 'auto',
     },
     closeCalendarButton: {
-        backgroundColor: '#0056b3',
-        padding: 15,
-        borderRadius: 10,
         marginTop: 10,
+        padding: 10,
+        backgroundColor: '#007bff',
+        borderRadius: 5,
     },
     closeCalendarButtonText: {
         color: '#fff',
-        textAlign: 'center',
         fontSize: 16,
-        fontWeight: 'bold',
     },
 });
 
