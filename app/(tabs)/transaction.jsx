@@ -70,7 +70,6 @@ const BudgetScreen = () => {
         );
     };
 
-    // NOTE -- Basically the 'click' variable
     const addExpense = async(e) => {
         e.preventDefault();
 
@@ -89,13 +88,12 @@ const BudgetScreen = () => {
             alert('Please enter valid expense details, select a category and subcategory, and choose a due date.');
         }
 
-        // Include dueDate in the budgets object
         const transactions = { 
             expenseName, 
             expenseAmount: parseFloat(cleanedAmount), 
             category,
             subCategory,
-            dueDate, // Add dueDate here
+            dueDate,
             isAutoPay 
         };
     
@@ -274,7 +272,7 @@ const BudgetScreen = () => {
                             thumbColor={isAutoPay ? "#f5dd4b" : "#f4f3f4"}
                         />
                     </View>
-                    {/* NOTE -- The function(addExpense) that executes when the button is pressed */}
+                    {}
                     <TouchableOpacity style={styles.addButton} onPress={addExpense}>
                         <Text style={styles.addButtonText}>Add Expense</Text>
                     </TouchableOpacity>
@@ -323,7 +321,7 @@ const BudgetScreen = () => {
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalText}>Are you sure you want to delete this expense?</Text>
-                        <View style={styles.modalButtons}>
+                        <View style={styles.modalButtonsRow}>
                             <Pressable style={styles.modalButtonYes} onPress={deleteExpense}>
                                 <Text style={styles.modalButtonText}>Yes, Delete</Text>
                             </Pressable>
@@ -393,6 +391,12 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
     },
+    modalText: {
+        color: '#fff', 
+        fontSize: 18,
+        textAlign: 'center',
+        marginBottom: 15,
+    },
     textWhite: {
         color: 'white',
     },
@@ -409,8 +413,32 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginTop: 10,
     },
+    modalButtonsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginTop: 15,
+    },
+    modalButtonYes: {
+        backgroundColor: '#FF6347',
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 5,
+    },
+    modalButtonCancel: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+        flex: 1,
+        marginLeft: 5,
+    },
     modalButtonText: {
         color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
     dateButton: {
         backgroundColor: '#fff',
