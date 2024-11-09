@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { 
     View, 
     Text, 
@@ -15,10 +15,9 @@ import {
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import CircularChart from '../../compents/PieChart.jsx';
-import useBudgetStore from '../budgetState';
 
 const BudgetScreen = () => {
-     // Local form state
+    const [expenses, setExpenses] = useState([]);
     const [expenseName, setExpenseName] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
     const [category, setCategory] = useState('');
@@ -31,11 +30,6 @@ const BudgetScreen = () => {
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [subCategoryModalVisible, setSubCategoryModalVisible] = useState(false);
 
- // Access store state and actions using individual selectors
-    const expenses = useBudgetStore((state) => state.expenses);
-    const addToStore = useBudgetStore((state) => state.addExpense);
-    const deleteFromStore = useBudgetStore((state) => state.deleteExpense);
-
     const categories = {
         Bills: ['Rent', 'Utilities', 'Internet'],
         Shopping: ['Groceries', 'Clothing', 'Electronics'],
@@ -43,71 +37,106 @@ const BudgetScreen = () => {
         Others: ['Miscellaneous']
     };
 
-    const resetForm = useCallback(() => {
-        setExpenseName('');
-        setExpenseAmount('');
-        setCategory('');
-        setSubCategory('');
-        setDueDate(null);
-        setIsAutoPay(false);
-    }, []);
+    const categoryColors = {
+        Bills: '#FF6347',
+        Rent: '#FF4500',
+        Utilities: '#FF7F50',
+        Internet: '#DC143C',
+        Shopping: '#36A2EB',
+        Groceries: '#4682B4',
+        Clothing: '#1E90FF',
+        Electronics: '#00BFFF',
+        Eating: '#FFCE56',
+        Restaurants: '#FFD700',
+        FastFood: '#FFA500',
+        Others: '#4BC0C0',
+        Miscellaneous: '#008080',
+    };
 
-    const addExpense = useCallback(async(e) => {
+    const renderPicker = (items, placeholder, value, onValueChange) => {
+        return (
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={value}
+                    onValueChange={onValueChange}
+                    style={Platform.OS === 'ios' ? styles.pickerIOS : styles.pickerAndroid}
+                >
+                    <Picker.Item label={placeholder} value="" />
+                    {items.map((item, index) => (
+                        <Picker.Item key={index} label={item} value={item} />
+                    ))}
+                </Picker>
+            </View>
+        );
+    };
+
+    // NOTE -- Basically the 'click' variable
+    const addExpense = async(e) => {
         e.preventDefault();
-    
+
         const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
         if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate && category && subCategory) {
-            const newExpense = { 
-                id: Date.now().toString(),
+            setExpenses([...expenses, { 
                 name: expenseName, 
                 amount: parseFloat(cleanedAmount),
                 dueDate: dueDate,
                 category: category,
                 subCategory: subCategory,
                 isAutoPay: isAutoPay 
-            };
-    
-            try {
-                //Add to store first
-                addToStore(newExpense);
-                
-                // Then make API call
-                const response = await fetch("http://172.20.10.3:3000/api/transaction/save", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(newExpense),
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-    
-                resetForm();
-                
-                console.log("New Transaction added");
-                alert("Transaction added successfully!");
-    
-            } catch (error) {
-                console.error("Error adding Transaction:", error);
-                alert("There was an error adding the transaction.");
-            }
+            }]);
+            resetForm();
         } else {
             alert('Please enter valid expense details, select a category and subcategory, and choose a due date.');
         }
-    }, [expenseName, expenseAmount, category, subCategory, dueDate, isAutoPay, addToStore, resetForm]);
 
-    const deleteExpense = useCallback(() => {
-        if (deleteIndex !== null && expenses[deleteIndex]) {
-            const expenseToDelete = expenses[deleteIndex];
-            deleteFromStore(expenseToDelete.id);
-            setModalVisible(false);
-            setDeleteIndex(null);
+        // Include dueDate in the budgets object
+        const transactions = { 
+            expenseName, 
+            expenseAmount: parseFloat(cleanedAmount), 
+            category,
+            subCategory,
+            dueDate, // Add dueDate here
+            isAutoPay 
+        };
+    
+      try {
+        const response = await fetch("http://172.20.10.3:3000/api/transaction/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(transactions),
+        });
+    
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-    }, [deleteIndex, expenses, deleteFromStore]);
+    
+        console.log("New Transaction added");
+        alert("Transaction added successfully!");
+    
+      } catch (error) {
+        console.error("Error adding Transaction:", error);
+        alert("There was an error adding the transaction.");
+      }
+    };
 
-    const calculateCategoryTotals = useCallback(() => {
+    const resetForm = () => {
+        setExpenseName('');
+        setExpenseAmount('');
+        setCategory('');
+        setSubCategory('');
+        setDueDate(null);
+        setIsAutoPay(false);
+    };
+
+    const deleteExpense = () => {
+        const updatedExpenses = expenses.filter((_, i) => i !== deleteIndex);
+        setExpenses(updatedExpenses);
+        setModalVisible(false);
+    };
+
+    const calculateCategoryTotals = () => {
         const categoryTotals = {};
         Object.keys(categories).forEach(cat => categoryTotals[cat] = 0);
         expenses.forEach(expense => {
@@ -119,9 +148,9 @@ const BudgetScreen = () => {
             name,
             value
         }));
-    }, [expenses, categories]);
+    };
 
-    const renderExpenseItem = useCallback(({ item, index }) => (
+    const renderExpenseItem = ({ item, index }) => (
         <View style={styles.item}>
             <View style={styles.itemContent}>
                 <Text style={styles.itemText}>{item.name}</Text>
@@ -141,7 +170,7 @@ const BudgetScreen = () => {
                 <Text style={styles.deleteButtonText}>Delete</Text>
             </TouchableOpacity>
         </View>
-    ), []);
+    );
 
     return (
         <SafeAreaView style={styles.container}>
@@ -245,7 +274,7 @@ const BudgetScreen = () => {
                             thumbColor={isAutoPay ? "#f5dd4b" : "#f4f3f4"}
                         />
                     </View>
-
+                    {/* NOTE -- The function(addExpense) that executes when the button is pressed */}
                     <TouchableOpacity style={styles.addButton} onPress={addExpense}>
                         <Text style={styles.addButtonText}>Add Expense</Text>
                     </TouchableOpacity>
@@ -256,7 +285,7 @@ const BudgetScreen = () => {
                         <Text style={styles.sectionTitle}>Your Expenses</Text>
                         <FlatList
                             data={expenses}
-                            keyExtractor={(item) => item.id}
+                            keyExtractor={(item, index) => index.toString()}
                             renderItem={renderExpenseItem}
                             ItemSeparatorComponent={() => <View style={styles.separator} />}
                         />

@@ -1,527 +1,327 @@
-// app/(tabs)/budget.jsx
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, TextInput, Button, TouchableOpacity, Switch, Modal, Pressable } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import { useState } from 'react';
 
-import React, { useState, useCallback } from 'react';
-import { 
-    View, 
-    Text, 
-    TextInput, 
-    StyleSheet, 
-    ScrollView, 
-    TouchableOpacity,
-    Modal,
-    Pressable,
-    Alert,
-    FlatList
-} from 'react-native';
-import useBudgetStore from '../budgetState';
+class BudgetScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      expenses: [],
+      expenseName: '',
+      expenseAmount: '',
+      dueDate: null,
+      isAutoPay: false,
+      showCalendar: false,
+      modalVisible: false,
+      deleteIndex: null,
+      budgetCategories: {
+        Bills: 300,
+        Shopping: 200,
+        Entertainment: 100,
+      },
+    };
+  }
 
-const BudgetScreen = () => {
-    // State declarations
-    const [editingCategory, setEditingCategory] = useState(null);
-    const [tempBudgetAmount, setTempBudgetAmount] = useState('');
-    const [modalVisible, setModalVisible] = useState(false);
-    const [newCategoryModal, setNewCategoryModal] = useState(false);
-    const [editCategoryModal, setEditCategoryModal] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState('');
-    const [newSubcategories, setNewSubcategories] = useState('');
-    const [tempNewBudget, setTempNewBudget] = useState('');
+  addExpense = async (e) => {
+    e.preventDefault();
+  
+    const { expenseName, expenseAmount, dueDate, isAutoPay, expenses } = this.state;
+    const cleanedAmount = expenseAmount.replace(/[^0-9.]/g, '');
+  
+    if (expenseName && cleanedAmount && !isNaN(cleanedAmount) && parseFloat(cleanedAmount) > 0 && dueDate) {
+      this.setState({
+        expenses: [...expenses, { 
+          name: expenseName, 
+          amount: parseFloat(cleanedAmount),
+          dueDate: dueDate,
+          isAutoPay: isAutoPay 
+        }],
+        expenseName: '',
+        expenseAmount: '',
+        dueDate: '',
+        isAutoPay: false
+      });
+    } else {
+      alert('Please enter valid expense details and select a due date.');
+    }
+    
+    // Include dueDate in the budgets object
+    const budgets = { 
+      expenseName, 
+      expenseAmount: parseFloat(cleanedAmount), 
+      dueDate, // Add dueDate here
+      isAutoPay 
+    };
+  
+    try {
+      const response = await fetch("http://172.20.10.3:3000/api/budget/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(budgets),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      console.log("New Expense added");
+      alert("Expense added successfully!");
+  
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      alert("There was an error adding the expense.");
+    }
+  };
+  
+  confirmDeleteExpense = (index) => {
+    this.setState({ deleteIndex: index, modalVisible: true });
+  };
 
-    // Get store data and actions
-    const expenses = useBudgetStore((state) => state.expenses);
-    const budgetCategories = useBudgetStore((state) => state.budgetCategories);
-    const updateBudgetCategory = useBudgetStore((state) => state.updateBudgetCategory);
-    const addNewCategory = useBudgetStore((state) => state.addNewCategory);
-    const deleteCategory = useBudgetStore((state) => state.deleteCategory);
-    const updateCategoryName = useBudgetStore((state) => state.updateCategoryName);
-    const updateSubcategories = useBudgetStore((state) => state.updateSubcategories);
-    const canDeleteCategory = useBudgetStore((state) => state.canDeleteCategory);
+  deleteExpense = () => {
+    const { deleteIndex, expenses } = this.state;
+    this.setState({
+      expenses: expenses.filter((_, i) => i !== deleteIndex),
+      modalVisible: false
+    });
+  };
 
-    // Calculate spent amount for a category
-    const calculateSpentAmount = useCallback((category) => {
-        return expenses
-            .filter(expense => expense.category === category)
-            .reduce((total, expense) => total + parseFloat(expense.amount || 0), 0);
-    }, [expenses]);
+  onDateSelect = (date) => {
+    this.setState({ dueDate: date.dateString, showCalendar: false });
+  };
 
-    // Handle editing budget
-    const handleEditBudget = useCallback((category) => {
-        setEditingCategory(category);
-        setTempBudgetAmount(budgetCategories[category].budget.toString());
-        setModalVisible(true);
-    }, [budgetCategories]);
-
-    // Handle saving budget
-    const handleSaveBudget = useCallback(() => {
-        if (!tempBudgetAmount || isNaN(tempBudgetAmount) || parseFloat(tempBudgetAmount) < 0) {
-            Alert.alert('Invalid Amount', 'Please enter a valid budget amount');
-            return;
+  updateCategoryAmount = (category, newAmount) => {
+    const parsedAmount = parseFloat(newAmount);
+    if (!isNaN(parsedAmount)) {
+      this.setState(prevState => ({
+        budgetCategories: {
+          ...prevState.budgetCategories,
+          [category]: parsedAmount,
         }
+      }));
+    }
+  };
 
-        updateBudgetCategory(editingCategory, parseFloat(tempBudgetAmount));
-        setModalVisible(false);
-        setEditingCategory(null);
-        setTempBudgetAmount('');
-    }, [tempBudgetAmount, editingCategory, updateBudgetCategory]);
+  renderExpenseItem = ({ item, index }) => (
+    <View style={styles.item}>
+      <View style={styles.itemContent}>
+        <Text>{item.name}</Text>
+        <Text>${item.amount.toFixed(2)}</Text>
+        <Text>Due: {item.dueDate}</Text>
+        <Text>Auto-Pay: {item.isAutoPay ? 'Yes' : 'No'}</Text>
+      </View>
+      <TouchableOpacity 
+        style={styles.deleteButton}
+        onPress={() => this.confirmDeleteExpense(index)}
+      >
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-    // Handle adding new category
-    const handleAddNewCategory = useCallback(() => {
-        if (!newCategoryName.trim()) {
-            Alert.alert('Invalid Category', 'Please enter a category name');
-            return;
-        }
+  renderBudgetCategoryItem = ({ item }) => {
+    const [category, amount] = item;
+    return (
+      <View style={styles.item}>
+        <Text style={styles.category}>{category}</Text>
+        <TextInput
+          style={styles.input}
+          defaultValue={amount.toString()}
+          onEndEditing={(e) => this.updateCategoryAmount(category, e.nativeEvent.text)}
+          keyboardType="numeric"
+        />
+      </View>
+    );
+  };
 
-        if (budgetCategories[newCategoryName]) {
-            Alert.alert('Invalid Category', 'This category already exists');
-            return;
-        }
-
-        const budget = parseFloat(tempNewBudget) || 0;
-        const subcategories = newSubcategories.split(',').map(s => s.trim()).filter(s => s);
-
-        addNewCategory(newCategoryName, budget, subcategories);
-        setNewCategoryModal(false);
-        resetNewCategoryForm();
-    }, [newCategoryName, tempNewBudget, newSubcategories, budgetCategories, addNewCategory]);
-
-    // Handle editing category
-    const handleEditCategory = useCallback((category) => {
-        setEditingCategory(category);
-        setNewCategoryName(category);
-        setNewSubcategories(budgetCategories[category].subcategories.join(', '));
-        setEditCategoryModal(true);
-    }, [budgetCategories]);
-
-    // Handle updating category
-    const handleUpdateCategory = useCallback(() => {
-        if (!newCategoryName.trim()) {
-            Alert.alert('Invalid Category', 'Please enter a category name');
-            return;
-        }
-
-        const subcategories = newSubcategories.split(',').map(s => s.trim()).filter(s => s);
-        
-        if (newCategoryName !== editingCategory) {
-            updateCategoryName(editingCategory, newCategoryName);
-        }
-        
-        updateSubcategories(newCategoryName, subcategories);
-        setEditCategoryModal(false);
-        resetNewCategoryForm();
-    }, [newCategoryName, newSubcategories, editingCategory, updateCategoryName, updateSubcategories]);
-
-    // Handle deleting category
-    const handleDeleteCategory = useCallback((category) => {
-        if (!canDeleteCategory(category)) {
-            Alert.alert(
-                'Cannot Delete Category',
-                'This category has associated expenses. Please delete or reassign all expenses before deleting the category.',
-                [{ text: 'OK' }]
-            );
-            return;
-        }
-
-        Alert.alert(
-            'Delete Category',
-            `Are you sure you want to delete ${category}?`,
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel'
-                },
-                {
-                    text: 'Delete',
-                    onPress: () => {
-                        try {
-                            deleteCategory(category);
-                            Alert.alert('Success', 'Category deleted successfully');
-                        } catch (error) {
-                            console.error('Error deleting category:', error);
-                            Alert.alert('Error', 'Failed to delete category');
-                        }
-                    },
-                    style: 'destructive'
-                }
-            ]
-        );
-    }, [deleteCategory, canDeleteCategory]);
-
-    // Reset form
-    const resetNewCategoryForm = useCallback(() => {
-        setNewCategoryName('');
-        setNewSubcategories('');
-        setTempNewBudget('');
-        setEditingCategory(null);
-    }, []);
-
-    // Render budget category
-    const renderBudgetCategory = useCallback(({ item: category }) => {
-        const categoryData = budgetCategories[category];
-        if (!categoryData) return null;
-
-        const spentAmount = calculateSpentAmount(category);
-        const remainingAmount = categoryData.budget - spentAmount;
-        const percentageUsed = categoryData.budget > 0 ? (spentAmount / categoryData.budget) * 100 : 0;
-
-        return (
-            <View style={styles.categoryCard}>
-                <View style={styles.categoryHeader}>
-                    <Text style={styles.categoryTitle}>{category}</Text>
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity 
-                            style={styles.editButton}
-                            onPress={() => handleEditBudget(category)}
-                        >
-                            <Text style={styles.editButtonText}>Edit Budget</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={[styles.editButton, { marginLeft: 10 }]}
-                            onPress={() => handleEditCategory(category)}
-                        >
-                            <Text style={styles.editButtonText}>Edit Category</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={[styles.deleteButton, { marginLeft: 10 }]}
-                            onPress={() => handleDeleteCategory(category)}
-                        >
-                            <Text style={styles.editButtonText}>Delete</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                <View style={styles.budgetInfo}>
-                    <Text style={styles.budgetText}>Budget: ${categoryData.budget.toFixed(2)}</Text>
-                    <Text style={styles.budgetText}>Spent: ${spentAmount.toFixed(2)}</Text>
-                    <Text style={[
-                        styles.budgetText, 
-                        remainingAmount < 0 ? styles.overBudget : styles.underBudget
-                    ]}>
-                        Remaining: ${remainingAmount.toFixed(2)}
-                    </Text>
-                    <Text style={styles.subcategoriesText}>
-                        Subcategories: {categoryData.subcategories.join(', ')}
-                    </Text>
-                </View>
-
-                <View style={styles.progressBarContainer}>
-                    <View 
-                        style={[
-                            styles.progressBar, 
-                            { 
-                                width: `${Math.min(percentageUsed, 100)}%`,
-                                backgroundColor: percentageUsed > 100 ? '#FF4444' : '#4CAF50'
-                            }
-                        ]} 
-                    />
-                </View>
-                <Text style={styles.percentageText}>{percentageUsed.toFixed(1)}% Used</Text>
-            </View>
-        );
-    }, [budgetCategories, calculateSpentAmount, handleEditBudget, handleEditCategory, handleDeleteCategory]);
+  render() {
+    const { expenses, expenseName, expenseAmount, dueDate, isAutoPay, showCalendar, modalVisible, budgetCategories } = this.state;
+    const totalBudget = Object.values(budgetCategories).reduce((total, amount) => total + amount, 0);
+    const totalAmount = expenses.reduce((total, expense) => total + expense.amount, 0);
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Budget Overview</Text>
-            
-            <TouchableOpacity 
-                style={styles.addCategoryButton}
-                onPress={() => setNewCategoryModal(true)}
-            >
-                <Text style={styles.addCategoryButtonText}>Add New Category</Text>
-            </TouchableOpacity>
+      <View style={styles.container}>
+        <Text style={styles.title}>Detailed Budget Manager</Text>
 
-            <FlatList
-                data={Object.keys(budgetCategories)}
-                renderItem={renderBudgetCategory}
-                keyExtractor={item => item}
-                style={styles.categoryList}
-            />
+        <TextInput
+          style={styles.input}
+          placeholder="Expense Name"
+          value={expenseName}
+          onChangeText={(text) => this.setState({ expenseName: text })}
+        />
 
-            {/* Edit Budget Modal */}
-            <Modal
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Set Budget for {editingCategory}</Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            value={tempBudgetAmount}
-                            onChangeText={setTempBudgetAmount}
-                            keyboardType="numeric"
-                            placeholder="Enter budget amount"
-                            placeholderTextColor="#666"
-                        />
-                      
-                        <View style={styles.modalButtons}>
-                            <Pressable 
-                                style={[styles.modalButton, styles.saveButton]}
-                                onPress={handleSaveBudget}
-                            >
-                                <Text style={styles.modalButtonText}>Save</Text>
-                            </Pressable>
-                            <Pressable 
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
-                            </Pressable>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+        <TextInput
+          style={styles.input}
+          placeholder="Expense Amount"
+          keyboardType="numeric"
+          value={expenseAmount}
+          onChangeText={(text) => this.setState({ expenseAmount: text })}
+        />
 
-            {/* New Category Modal */}
-            <Modal
-                transparent={true}
-                visible={newCategoryModal}
-                onRequestClose={() => setNewCategoryModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Add New Category</Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            value={newCategoryName}
-                            onChangeText={setNewCategoryName}
-                            placeholder="Category Name"
-                            placeholderTextColor="#666"
-                        />
-                        <TextInput
-                            style={styles.modalInput}
-                            value={tempNewBudget}
-                            onChangeText={setTempNewBudget}
-                            keyboardType="numeric"
-                            placeholder="Initial Budget (optional)"
-                            placeholderTextColor="#666"
-                        />
-                        <TextInput
-                            style={styles.modalInput}
-                            value={newSubcategories}
-                            onChangeText={setNewSubcategories}
-                            placeholder="Subcategories (comma-separated)"
-                            placeholderTextColor="#666"
-                        />
-                        <View style={styles.modalButtons}>
-                            <Pressable 
-                                style={[styles.modalButton, styles.saveButton]}
-                                onPress={handleAddNewCategory}
-                            >
-                                <Text style={styles.modalButtonText}>Add</Text>
-                            </Pressable>
-                            <Pressable 
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => {
-                                    setNewCategoryModal(false);
-                                    resetNewCategoryForm();
-                                }}
-                            >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
-                            </Pressable>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+        <Button title={dueDate ? `Due Date: ${dueDate}` : 'Select Due Date'} onPress={() => this.setState({ showCalendar: true })} />
+        
+        {showCalendar && (
+          <Calendar
+            onDayPress={this.onDateSelect}
+            markedDates={dueDate ? { [dueDate]: { selected: true, selectedColor: 'blue' } } : {}}
+          />
+        )}
 
-            {/* Edit Category Modal */}
-            <Modal
-                transparent={true}
-                visible={editCategoryModal}
-                onRequestClose={() => setEditCategoryModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Edit Category</Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            value={newCategoryName}
-                            onChangeText={setNewCategoryName}
-                            placeholder="Category Name"
-                            placeholderTextColor="#666"
-                        />
-                        <TextInput
-                            style={styles.modalInput}
-                            value={newSubcategories}
-                            onChangeText={setNewSubcategories}
-                            placeholder="Subcategories (comma-separated)"
-                            placeholderTextColor="#666"
-                        />
-                        <View style={styles.modalButtons}>
-                            <Pressable 
-                                style={[styles.modalButton, styles.saveButton]}
-                                onPress={handleUpdateCategory}
-                            >
-                                <Text style={styles.modalButtonText}>Update</Text>
-                            </Pressable>
-                            <Pressable 
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => {
-                                    setEditCategoryModal(false);
-                                    resetNewCategoryForm();
-                                }}
-                            >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
-                            </Pressable>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+        <View style={styles.switchContainer}>
+          <Text>Auto-Pay</Text>
+          <Switch
+            value={isAutoPay}
+            onValueChange={(value) => this.setState({ isAutoPay: value })}
+          />
         </View>
+        {/* NOTE -- This is the Button Press function call */}
+        <Button title="Add Expense" onPress={this.addExpense} />
+
+        <FlatList
+          data={expenses}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={this.renderExpenseItem}
+        />
+
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>Total Expenses: ${totalAmount.toFixed(2)}</Text>
+        </View>
+
+        <View style={styles.budgetContainer}>
+          <Text style={styles.sectionTitle}>Budget by Categories</Text>
+          <FlatList
+            data={Object.entries(budgetCategories)}
+            keyExtractor={(item) => item[0]}
+            renderItem={this.renderBudgetCategoryItem}
+          />
+        </View>
+
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>Total Budget: ${totalBudget.toFixed(2)}</Text>
+        </View>
+
+        <Modal
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => this.setState({ modalVisible: false })}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalText}>Are you sure you want to delete this expense?</Text>
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.modalButtonYes} onPress={this.deleteExpense}>
+                  <Text style={styles.modalButtonText}>Yes, Delete</Text>
+                </Pressable>
+                <Pressable style={styles.modalButtonCancel} onPress={() => this.setState({ modalVisible: false })}>
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
     );
-};
+  }
+}
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#036704',
-        padding: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 20,
-    },
-    addCategoryButton: {
-        backgroundColor: '#4CAF50',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 20,
-        alignItems: 'center',
-    },
-    addCategoryButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    categoryList: {
-        flex: 1,
-    },
-    categoryCard: {
-        backgroundColor: '#025703',
-        padding: 16,
-        borderRadius: 10,
-        marginBottom: 16,
-    },
-    categoryHeader: {
-        marginBottom: 10,
-    },
-    categoryTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 10,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        flexWrap: 'wrap',
-    },
-    editButton: {
-        backgroundColor: '#0056b3',
-        padding: 8,
-        borderRadius: 5,
-        minWidth: 80,
-        alignItems: 'center',
-    },
-    deleteButton: {
-        backgroundColor: '#dc3545',
-        padding: 8,
-        borderRadius: 5,
-        minWidth: 80,
-        alignItems: 'center',
-    },
-    editButtonText: {
-        color: '#fff',
-        fontSize: 14,
-    },
-    budgetInfo: {
-        marginBottom: 10,
-    },
-    budgetText: {
-        color: '#fff',
-        fontSize: 16,
-        marginBottom: 5,
-    },
-    subcategoriesText: {
-        color: '#ddd',
-        fontSize: 14,
-        marginTop: 5,
-    },
-    overBudget: {
-        color: '#FF4444',
-    },
-    underBudget: {
-        color: '#4CAF50',
-    },
-    progressBarContainer: {
-        height: 10,
-        backgroundColor: '#ddd',
-        borderRadius: 5,
-        marginBottom: 5,
-    },
-    progressBar: {
-        height: '100%',
-        borderRadius: 5,
-    },
-    percentageText: {
-        color: '#fff',
-        fontSize: 14,
-        textAlign: 'right',
-    },
-    modalContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#036704',
   },
-  modalContent: {
-      backgroundColor: '#fff',
-      padding: 20,
-      borderRadius: 10,
-      width: '80%',
-      maxWidth: 500,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#fff'
   },
-  modalTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginBottom: 15,
-      textAlign: 'center',
-      color: '#000',
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',  // Added white background
+    borderRadius: 5,          // Added rounded corners
   },
-  modalInput: {
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 5,
-      padding: 10,
-      marginBottom: 15,
-      fontSize: 16,
-      color: '#000',
-      backgroundColor: '#fff',
+  item: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+    alignItems: 'center',
   },
-  modalButtons: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: 10,
+  itemContent: {
+    flex: 1,
   },
-  modalButton: {
-      flex: 1,
-      padding: 12,
-      borderRadius: 5,
-      alignItems: 'center',
+  deleteButton: {
+    backgroundColor: '#ff4d4d',
+    padding: 5,
+    borderRadius: 5,
   },
-  saveButton: {
-      backgroundColor: '#4CAF50',
+  deleteButtonText: {
+    color: '#fff',
   },
-  cancelButton: {
-      backgroundColor: '#dc3545',
+  category: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  modalButtonText: {
-      color: '#fff',
-      fontSize: 16,
-      fontWeight: 'bold',
-  }
+  totalContainer: {
+    marginTop: 20,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  totalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff'
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    alignItems: 'center',
+    backgroundColor: '#025703',  // Slightly darker green for contrast
+    padding: 10,                 // Added padding
+    borderRadius: 5,             // Added rounded corners
+  },
+  switchText: {                  // New style for switch label
+    color: '#fff',
+    fontSize: 16,
+  },
+  button: {                      // New style for buttons
+    backgroundColor: '#0056b3',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  buttonText: {                  // New style for button text
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  budgetCategoryContainer: {     // New style for budget category items
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    marginBottom: 10,
+    padding: 10,
+  },
+  budgetCategoryInput: {         // New style for budget category inputs
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    width: 100,                  // Fixed width for consistency
+  },
 });
 
 export default BudgetScreen;
