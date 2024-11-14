@@ -3,28 +3,23 @@ import {
   View, 
   Text, 
   TextInput, 
-  Button, 
-  ScrollView, 
   StyleSheet, 
-  Modal, 
+  ScrollView, 
   Pressable, 
   KeyboardAvoidingView, 
   Platform, 
-  Keyboard
+  Keyboard,
+  TouchableOpacity
 } from 'react-native';
+import { Link } from 'expo-router';
 
 const Account = () => {
   const [goal, setGoal] = useState('');
   const [currentSavings, setCurrentSavings] = useState('');
   const [progress, setProgress] = useState(0);
-  const [investmentName, setInvestmentName] = useState('');
-  const [investmentAmount, setInvestmentAmount] = useState('');
-  const [investments, setInvestments] = useState([]);
   const [yearlyIncome, setYearlyIncome] = useState('');
   const [yearlyExpenses, setYearlyExpenses] = useState('');
   const [yearlyReport, setYearlyReport] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedInvestmentId, setSelectedInvestmentId] = useState(null);
 
   const dismissKeyboard = () => {
     if (Platform.OS !== 'web') {
@@ -41,9 +36,6 @@ const Account = () => {
     }
   };
 
-  // TODO(For John) -- The EF, It, and YR save under seperate users in the database, fix that
-
-  // NOTE -- Function called for calculating emergency fund progress
   const handleCalculateProgress = async(e) => {
     e.preventDefault();
 
@@ -91,62 +83,6 @@ const Account = () => {
     }
   };
 
-  // NOTE -- Function called for adding investment
-  const handleAddInvestment = async(e) => {
-    e.preventDefault();
-
-    dismissKeyboard();
-    const amount = parseFloat(investmentAmount);
-  
-    if (investmentName && !isNaN(amount)) {
-      const newInvestment = { id: Date.now().toString(), name: investmentName, amount };
-      setInvestments((prevInvestments) => [...prevInvestments, newInvestment]);
-      setInvestmentName('');
-      setInvestmentAmount('');
-    } else {
-      console.error('Please enter a valid investment name and amount.');
-    }
-
-    const investment = { 
-      investmentName,
-      investmentAmount
-    };
-
-    try {
-      const response = await fetch("http://172.20.10.3:3000/api/account/save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(investment),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    console.log("Investment Tracker Updated");
-    alert("Investment Tracker successfully updated!");
-
-    } catch (error) {
-    console.error("Error updating Investment Tracker:", error);
-    alert("There was an error updating the investment tracker.");
-    }
-  };
-
-  const openDeleteModal = (id) => {
-    dismissKeyboard();
-    setSelectedInvestmentId(id);
-    setModalVisible(true);
-  };
-
-  const deleteInvestment = () => {
-    const updatedInvestments = investments.filter((investment) => investment.id !== selectedInvestmentId);
-    setInvestments(updatedInvestments);
-    setModalVisible(false);
-    setSelectedInvestmentId(null);
-  };
-  // NOTE -- Function called for the Yearly Report Button
   const handleCalculateYearlyReport = async(e) => {
     e.preventDefault();
 
@@ -215,47 +151,18 @@ const Account = () => {
             returnKeyType="done"
             onSubmitEditing={() => handleInputSubmit()}
           />
-          {/* NOTE -- Emergency Fund button */}
           <Pressable style={styles.button} onPress={handleCalculateProgress}>
             <Text style={styles.buttonText}>Calculate Progress</Text>
           </Pressable>
           <Text style={styles.result}>
             Progress towards goal: {progress}%
           </Text>
-      
-          <Text style={styles.title}>Investment Tracker</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter investment name"
-            value={investmentName}
-            onChangeText={setInvestmentName}
-            returnKeyType="done"
-            onSubmitEditing={() => handleInputSubmit()}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Enter investment amount"
-            keyboardType={Platform.OS === 'web' ? 'numeric' : 'decimal-pad'}
-            value={investmentAmount}
-            onChangeText={setInvestmentAmount}
-            returnKeyType="done"
-            onSubmitEditing={() => handleInputSubmit()}
-          />
-          {/* NOTE -- The Add Investment button */}
-          <Pressable style={styles.button} onPress={handleAddInvestment}>
-            <Text style={styles.buttonText}>Add Investment</Text>
-          </Pressable>
 
-          {investments.map((item) => (
-            <View key={item.id} style={styles.investmentItem}>
-              <Text>{item.name}: ${item.amount.toFixed(2)}</Text>
-              <Button
-                title="Delete"
-                onPress={() => openDeleteModal(item.id)}
-                color="red"
-              />
-            </View>
-          ))}
+          <Link href="/investment" asChild>
+            <TouchableOpacity style={styles.linkButton}>
+              <Text style={styles.linkButtonText}>Go to Investment Tracker</Text>
+            </TouchableOpacity>
+          </Link>
 
           <Text style={styles.title}>Yearly Report</Text>
           <TextInput
@@ -276,7 +183,6 @@ const Account = () => {
             returnKeyType="done"
             onSubmitEditing={() => handleInputSubmit()}
           />
-          {/* NOTE -- Calculating the yearly report button */}
           <Pressable style={styles.button} onPress={handleCalculateYearlyReport}>
             <Text style={styles.buttonText}>Calculate Yearly Report</Text>
           </Pressable>
@@ -285,27 +191,6 @@ const Account = () => {
           </Text>
         </View>
       </ScrollView>
-
-      <Modal
-        transparent={true}
-        animationType="slide"
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Are you sure you want to delete this investment?</Text>
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.modalButtonYes} onPress={deleteInvestment}>
-                <Text style={styles.modalButtonText}>Yes, Delete</Text>
-              </Pressable>
-              <Pressable style={styles.modalButtonCancel} onPress={() => setModalVisible(false)}>
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -409,6 +294,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
+  linkButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    marginBottom: 20,
+    minWidth: 160,
+    shadowColor: '#000',
+    shadowOffset: {
+        width: 0,
+        height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+},
+linkButtonText: {
+    color: '#036704',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+},
 });
 
 export default Account;
