@@ -5,13 +5,12 @@ import {
   TextInput, 
   StyleSheet, 
   ScrollView, 
-  Pressable, 
   KeyboardAvoidingView, 
   Platform, 
   Keyboard,
   TouchableOpacity
 } from 'react-native';
-import { Link } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 
 const Account = () => {
   const [goal, setGoal] = useState('');
@@ -20,6 +19,7 @@ const Account = () => {
   const [yearlyIncome, setYearlyIncome] = useState('');
   const [yearlyExpenses, setYearlyExpenses] = useState('');
   const [yearlyReport, setYearlyReport] = useState('');
+  const router = useRouter();
 
   const dismissKeyboard = () => {
     if (Platform.OS !== 'web') {
@@ -36,15 +36,13 @@ const Account = () => {
     }
   };
 
-  const handleCalculateProgress = async(e) => {
-    e.preventDefault();
-
+  const handleCalculateProgress = async () => {
     dismissKeyboard();
     const goalValue = parseFloat(goal);
     const currentSavingsValue = parseFloat(currentSavings);
   
     if (isNaN(goalValue) || isNaN(currentSavingsValue)) {
-      console.error('Please enter valid numbers for goal and current savings.');
+      alert('Please enter valid numbers for goal and current savings.');
       return;
     }
   
@@ -52,40 +50,12 @@ const Account = () => {
       const calculatedProgress = ((currentSavingsValue / goalValue) * 100).toFixed(2);
       setProgress(calculatedProgress);
     } else {
-      console.error('Goal must be greater than zero.');
+      alert('Goal must be greater than zero.');
       setProgress(0);
-    }
-
-    const emergencyFund = { 
-      goal,
-      currentSavings
-    };
-
-    try {
-      const response = await fetch("http://172.20.10.3:3000/api/account/save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(emergencyFund),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    console.log("Emergency Fund Updated");
-    alert("Emergency Fund successfully updated!");
-
-    } catch (error) {
-    console.error("Error updating Emergency Fund:", error);
-    alert("There was an error updating the emergency fund.");
     }
   };
 
-  const handleCalculateYearlyReport = async(e) => {
-    e.preventDefault();
-
+  const handleCalculateYearlyReport = async () => {
     dismissKeyboard();
     const income = parseFloat(yearlyIncome);
     const expenses = parseFloat(yearlyExpenses);
@@ -94,66 +64,57 @@ const Account = () => {
       const report = income - expenses;
       setYearlyReport(`Your net savings for the year: $${report.toFixed(2)}`);
     } else {
-      console.error('Please enter valid yearly income and expenses.');
+      alert('Please enter valid yearly income and expenses.');
       setYearlyReport('');
-    }
-
-    const yearlyReports = { 
-      yearlyIncome,
-      yearlyExpenses
-    };
-
-    try {
-      const response = await fetch("http://172.20.10.3:3000/api/account/save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(yearlyReports),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    console.log("Yearly Report Updated");
-    alert("Yearly Report successfully updated!");
-
-    } catch (error) {
-    console.error("Error updating Yearly Report:", error);
-    alert("There was an error updating the yearly report.");
     }
   };
 
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: '#036704' }}
     >
-      <ScrollView style={styles.scrollViewContent}>
+      <ScrollView 
+        style={styles.scrollViewContent} 
+        contentContainerStyle={{ flexGrow: 1, backgroundColor: '#036704' }}
+      >
         <View style={styles.container}>
           <Text style={styles.title}>Emergency Fund Tracker</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your goal amount"
-            keyboardType={Platform.OS === 'web' ? 'numeric' : 'decimal-pad'}
+            keyboardType="decimal-pad"
             value={goal}
             onChangeText={setGoal}
             returnKeyType="done"
-            onSubmitEditing={() => handleInputSubmit()}
           />
           <TextInput
             style={styles.input}
             placeholder="Enter current savings"
-            keyboardType={Platform.OS === 'web' ? 'numeric' : 'decimal-pad'}
+            keyboardType="decimal-pad"
             value={currentSavings}
             onChangeText={setCurrentSavings}
             returnKeyType="done"
-            onSubmitEditing={() => handleInputSubmit()}
           />
-          <Pressable style={styles.button} onPress={handleCalculateProgress}>
-            <Text style={styles.buttonText}>Calculate Progress</Text>
-          </Pressable>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.linkButtonSmall} onPress={handleCalculateProgress}>
+              <Text style={styles.linkButtonText}>Calculate Progress</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.linkButtonSmall}
+              onPress={() => router.push({
+                pathname: '/BarGraph',
+                params: {
+                  goal: parseFloat(goal),
+                  currentSavings: parseFloat(currentSavings),
+                },
+              })}
+            >
+              <Text style={styles.linkButtonText}>View Bar Graph</Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.result}>
             Progress towards goal: {progress}%
           </Text>
@@ -168,24 +129,22 @@ const Account = () => {
           <TextInput
             style={styles.input}
             placeholder="Enter yearly income"
-            keyboardType={Platform.OS === 'web' ? 'numeric' : 'decimal-pad'}
+            keyboardType="decimal-pad"
             value={yearlyIncome}
             onChangeText={setYearlyIncome}
             returnKeyType="done"
-            onSubmitEditing={() => handleInputSubmit()}
           />
           <TextInput
             style={styles.input}
             placeholder="Enter yearly expenses"
-            keyboardType={Platform.OS === 'web' ? 'numeric' : 'decimal-pad'}
+            keyboardType="decimal-pad"
             value={yearlyExpenses}
             onChangeText={setYearlyExpenses}
             returnKeyType="done"
-            onSubmitEditing={() => handleInputSubmit()}
           />
-          <Pressable style={styles.button} onPress={handleCalculateYearlyReport}>
+          <TouchableOpacity style={styles.button} onPress={handleCalculateYearlyReport}>
             <Text style={styles.buttonText}>Calculate Yearly Report</Text>
-          </Pressable>
+          </TouchableOpacity>
           <Text style={styles.result}>
             {yearlyReport}
           </Text>
@@ -219,6 +178,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 16,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  linkButtonSmall: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    flex: 1,
+    marginLeft: 10,
+    alignItems: 'center',
+  },
+  linkButtonText: {
+    color: '#036704',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   button: {
     backgroundColor: '#4CAF50',
     padding: 15,
@@ -226,73 +205,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-  },
   result: {
     marginTop: 20,
     fontSize: 18,
     color: '#fff',
-  },
-  investmentItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalButtonYes: {
-    backgroundColor: 'red',
-    padding: 10,
-    borderRadius: 8,
-    flex: 1,
-    marginRight: 5,
-  },
-  modalButtonCancel: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 5,
-  },
-  modalButtonText: {
-    color: '#fff',
-    textAlign: 'center',
   },
   linkButton: {
     backgroundColor: '#fff',
@@ -301,21 +217,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginBottom: 20,
     minWidth: 160,
-    shadowColor: '#000',
-    shadowOffset: {
-        width: 0,
-        height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-},
-linkButtonText: {
-    color: '#036704',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-},
+  },
 });
 
 export default Account;
