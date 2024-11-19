@@ -135,7 +135,7 @@ const BarGraph = () => {
 
                 <BarChart
                     data={getChartData()}
-                    width={Dimensions.get('window').width - 40}
+                    width={Dimensions.get('window').width - 10}
                     height={300}
                     yAxisLabel="$"
                     chartConfig={{
@@ -145,14 +145,20 @@ const BarGraph = () => {
                         decimalPlaces: 0,
                         color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                         labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                        propsForVerticalLabels: {
+                            fontSize: 13, 
+                            translateX: -1, 
+                        },
+                        propsForHorizontalLabels: {
+                            fontSize: 12, 
+                            translateX: -6, 
+                        },
                         style: {
                             borderRadius: 16,
                         },
-                        barPercentage: 0.7,
-                        propsForLabels: {
-                            fontSize: 12,
-                        },
+                        barPercentage: 0.5,
                     }}
+                    
                     showValuesOnTopOfBars={true}
                     fromZero={true}
                     style={{
