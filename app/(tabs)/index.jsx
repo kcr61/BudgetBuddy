@@ -12,9 +12,9 @@ import {
     Modal,
 } from 'react-native';
 import { Link } from 'expo-router';
-import { ProgressBar } from 'react-native-paper'; 
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; 
-import { Calendar } from 'react-native-calendars'; 
+import { ProgressBar } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Calendar } from 'react-native-calendars';
 import { useState } from 'react';
 
 // Dummy data for demonstration
@@ -34,22 +34,46 @@ export default function App() {
     const [newBillName, setNewBillName] = useState('');
     const [newBillDate, setNewBillDate] = useState('');
 
-    // Calculate remaining amount
-    const remainingAmount = parseFloat(
-        ((parseFloat(totalBudget) || 0) - (parseFloat(spentAmount) || 0)).toFixed(2)
-    );    
-    const budgetProgress = spentAmount && totalBudget 
-    ? Math.min(Math.max(parseFloat((spentAmount / totalBudget).toFixed(2)), 0), 1) 
-    : 0;
+    // Updated calculations with proper validation and rounding
+    const remainingAmount = (() => {
+        const total = parseFloat(totalBudget) || 0;
+        const spent = parseFloat(spentAmount) || 0;
+        return parseFloat((total - spent).toFixed(2));
+    })();
 
+    const budgetProgress = (() => {
+        const total = parseFloat(totalBudget);
+        const spent = parseFloat(spentAmount);
+        if (!total || !spent || isNaN(total) || isNaN(spent)) return 0;
+        return Math.min(Math.round((spent / total) * 100) / 100, 1);
+    })();
 
+    const handleTotalBudgetChange = (text) => {
+        const cleaned = text.replace(/[^0-9.]/g, '');
+        const parts = cleaned.split('.');
+        if (parts.length > 2) {
+            setTotalBudget(parts[0] + '.' + parts.slice(1).join(''));
+        } else {
+            setTotalBudget(cleaned);
+        }
+    };
+
+    const handleSpentAmountChange = (text) => {
+        const cleaned = text.replace(/[^0-9.]/g, '');
+        const parts = cleaned.split('.');
+        if (parts.length > 2) {
+            setSpentAmount(parts[0] + '.' + parts.slice(1).join(''));
+        } else {
+            setSpentAmount(cleaned);
+        }
+    };
 
     const handleAddBill = () => {
         if (newBillName.trim() && newBillDate) {
             const today = new Date().toISOString().split('T')[0];
             const newBill = {
-                id: String(bills.length + 1),
-                name: newBillName,
+                id: String(Date.now()),
+                name: newBillName.trim(),
                 dueDate: newBillDate,
                 status: newBillDate < today ? 'past-due' : 'upcoming',
             };
@@ -74,72 +98,70 @@ export default function App() {
             setDeleteModalVisible(false);
         }
     };
+
     const getBillIcon = (billName) => {
         const lowerName = billName.toLowerCase();
         if (lowerName.includes('electricity')) return 'lightbulb-on-outline';
         if (lowerName.includes('water')) return 'water';
-        if (lowerName.includes('internet') || lowerName.includes('wifi')) return 'wifi';
-        if (lowerName.includes('rent') || lowerName.includes('house')) return 'home';
+        if (lowerName.includes('internet')) return 'wifi';
+        if (lowerName.includes('rent')) return 'home';
         if (lowerName.includes('phone')) return 'cellphone';
-        if (lowerName.includes('food') || lowerName.includes('pizza')) return 'food';
-        if (lowerName.includes('shopping') || lowerName.includes('clothes')) return 'shopping';
-        if (lowerName.includes('car') || lowerName.includes('gas')) return 'car';
-        if (lowerName.includes('groceries') || lowerName.includes('market')) return 'cart-outline';
-        if (lowerName.includes('movies') || lowerName.includes('netflix') || lowerName.includes('entertainment')) return 'movie-open-outline';
-        if (lowerName.includes('subscription') || lowerName.includes('streaming') || lowerName.includes('spotify')) return 'file-multiple-outline';
-        if (lowerName.includes('bus') || lowerName.includes('train') || lowerName.includes('metro')) return 'bus';
-        if (lowerName.includes('insurance') || lowerName.includes('health')) return 'shield-check-outline';
-        if (lowerName.includes('medical') || lowerName.includes('doctor') || lowerName.includes('hospital')) return 'hospital-box-outline';
-        if (lowerName.includes('school') || lowerName.includes('tuition') || lowerName.includes('education')) return 'book-open-outline';
-        if (lowerName.includes('restaurant') || lowerName.includes('dining') || lowerName.includes('coffee')) return 'silverware-fork-knife';
-        if (lowerName.includes('travel') || lowerName.includes('flight') || lowerName.includes('hotel')) return 'airplane-takeoff';
-        if (lowerName.includes('gym') || lowerName.includes('fitness') || lowerName.includes('workout')) return 'dumbbell';
-        if (lowerName.includes('pets') || lowerName.includes('dog') || lowerName.includes('cat')) return 'dog';
-        if (lowerName.includes('gifts') || lowerName.includes('birthday') || lowerName.includes('holiday')) return 'gift-outline';
-        if (lowerName.includes('savings') || lowerName.includes('investment') || lowerName.includes('bank')) return 'piggy-bank-outline';
-        if (lowerName.includes('loan') || lowerName.includes('mortgage') || lowerName.includes('debt')) return 'bank-outline';
+        if (lowerName.includes('food')) return 'food';
+        if (lowerName.includes('shopping')) return 'shopping';
+        if (lowerName.includes('car')) return 'car';
+        if (lowerName.includes('groceries')) return 'cart-outline';
+        if (lowerName.includes('movies')) return 'movie-open-outline';
+        if (lowerName.includes('subscription')) return 'file-multiple-outline';
+        if (lowerName.includes('bus')) return 'bus';
+        if (lowerName.includes('insurance')) return 'shield-check-outline';
+        if (lowerName.includes('medical')) return 'hospital-box-outline';
+        if (lowerName.includes('school')) return 'book-open-outline';
+        if (lowerName.includes('restaurant')) return 'silverware-fork-knife';
+        if (lowerName.includes('travel')) return 'airplane-takeoff';
+        if (lowerName.includes('gym')) return 'dumbbell';
+        if (lowerName.includes('pets')) return 'dog';
+        if (lowerName.includes('gifts')) return 'gift-outline';
+        if (lowerName.includes('savings')) return 'piggy-bank-outline';
+        if (lowerName.includes('loan')) return 'bank-outline';
         return 'currency-usd'; // Default icon
     };
-    
-//renderBillItem to use icons
-const renderBillItem = ({ item }) => {
-    const today = new Date().toISOString().split('T')[0];
 
-    let statusText;
-    let backgroundColor;
+    const renderBillItem = ({ item }) => {
+        const today = new Date().toISOString().split('T')[0];
+        let statusText;
+        let backgroundColor;
 
-    if (item.dueDate < today) {
-        statusText = `Past Due: ${item.dueDate}`;
-        backgroundColor = '#ffeeee'; // Light red
-    } else if (item.dueDate === today) {
-        statusText = `Due Today: ${item.dueDate}`;
-        backgroundColor = '#fff7e6'; // Light orange
-    } else {
-        statusText = `Upcoming Due: ${item.dueDate}`;
-        backgroundColor = '#e6ffe6'; // Light green
-    }
+        if (item.dueDate < today) {
+            statusText = `Past Due: ${item.dueDate}`;
+            backgroundColor = '#ffeeee';
+        } else if (item.dueDate === today) {
+            statusText = `Due Today: ${item.dueDate}`;
+            backgroundColor = '#fff7e6';
+        } else {
+            statusText = `Upcoming Due: ${item.dueDate}`;
+            backgroundColor = '#e6ffe6';
+        }
 
-    return (
-        <View style={[styles.billItem, { backgroundColor }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Icon
-                    name={getBillIcon(item.name)} 
-                    size={20}
-                    color={item.dueDate < today ? 'red' : '#036704'}
-                    style={{ marginRight: 10 }}
-                />
-                <Text style={[styles.billText, { flex: 1 }]}>
-                    {item.name} - {statusText}
-                </Text>
-                <TouchableOpacity onPress={() => confirmDeleteBill(item)}>
-                    <Icon name="delete" size={20} color="red" />
-                </TouchableOpacity>
+        return (
+            <View style={[styles.billItem, { backgroundColor }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <Icon
+                        name={getBillIcon(item.name)}
+                        size={20}
+                        color={item.dueDate < today ? 'red' : '#036704'}
+                        style={{ marginRight: 10 }}
+                    />
+                    <Text style={[styles.billText, { flex: 1 }]}>
+                        {item.name} - {statusText}
+                    </Text>
+                    <TouchableOpacity onPress={() => confirmDeleteBill(item)}>
+                        <Icon name="delete" size={20} color="red" />
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
-    );
-};
+        );
+    };
 
-    
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ScrollView
@@ -155,7 +177,6 @@ const renderBillItem = ({ item }) => {
                     </TouchableOpacity>
                 </Link>
 
-                {/* Spending Budget Section */}
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>Spending Budget</Text>
                     <TextInput
@@ -163,7 +184,7 @@ const renderBillItem = ({ item }) => {
                         placeholder="Enter Total Budget"
                         keyboardType="numeric"
                         value={totalBudget}
-                        onChangeText={setTotalBudget}
+                        onChangeText={handleTotalBudgetChange}
                         placeholderTextColor="#666"
                         returnKeyType="done"
                         onSubmitEditing={Keyboard.dismiss}
@@ -173,16 +194,16 @@ const renderBillItem = ({ item }) => {
                         placeholder="Enter Amount Spent"
                         keyboardType="numeric"
                         value={spentAmount}
-                        onChangeText={setSpentAmount}
+                        onChangeText={handleSpentAmountChange}
                         placeholderTextColor="#666"
                         returnKeyType="done"
                         onSubmitEditing={Keyboard.dismiss}
                     />
-                <ProgressBar
-    progress={budgetProgress} 
-    color={budgetProgress > 0.8 ? 'red' : '#036704'}
-    style={{ marginVertical: 10, height: 10, borderRadius: 5 }}
-/>
+                    <ProgressBar
+                        progress={budgetProgress}
+                        color={budgetProgress > 0.8 ? 'red' : '#036704'}
+                        style={{ marginVertical: 10, height: 10, borderRadius: 5 }}
+                    />
 
                     <Text style={[styles.budgetText, remainingAmount < 0 && styles.negativeAmount]}>
                         Amount Left: ${remainingAmount.toFixed(2)}
@@ -192,7 +213,6 @@ const renderBillItem = ({ item }) => {
                     </Text>
                 </View>
 
-                {/* Bill Reminders Section */}
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>Bill Reminders</Text>
                     <FlatList
@@ -215,7 +235,6 @@ const renderBillItem = ({ item }) => {
                     </Link>
                 </View>
 
-                {/* Add Bill Modal */}
                 <Modal visible={addBillModalVisible} transparent animationType="slide">
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
@@ -246,7 +265,6 @@ const renderBillItem = ({ item }) => {
                     </View>
                 </Modal>
 
-                {/* Delete Confirmation Modal */}
                 <Modal visible={deleteModalVisible} transparent animationType="fade">
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
@@ -317,6 +335,9 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         color: '#036704',
     },
+    negativeAmount: {
+        color: 'red',
+    },
     billsList: {
         width: '100%',
     },
@@ -327,10 +348,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         borderLeftWidth: 4,
         borderLeftColor: '#036704',
-    },
-    pastDueBill: {
-        borderLeftColor: 'red',
-        backgroundColor: '#ffeeee',
     },
     billText: {
         fontSize: 16,
