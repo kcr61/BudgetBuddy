@@ -54,6 +54,15 @@ const Account = () => {
       setProgress(0);
     }
   };
+  const ProgressDisplay = ({ currentAmount, goalAmount }) => (
+    <>
+      <Text style={styles.amountText}>Goal: {formatCurrency(goalAmount)}</Text>
+      <Text style={styles.amountText}>Current: {formatCurrency(currentAmount)}</Text>
+      <Text style={styles.progressText}>
+        Progress: {formatPercentage((currentAmount / goalAmount) * 100)}
+      </Text>
+    </>
+  );
 
   const handleCalculateYearlyReport = async () => {
     dismissKeyboard();

@@ -36,7 +36,11 @@ const BudgetScreen = () => {
         Eating: ['Restaurants', 'FastFood'],
         Others: ['Miscellaneous']
     };
-
+    const CategorySummary = ({ category, count, amount }) => (
+        <Text style={styles.categoryText}>
+          {`${count} ${category}: ${formatCurrency(amount)}`}
+        </Text>
+      );
     const categoryColors = {
         Bills: '#FF6347',
         Rent: '#FF4500',

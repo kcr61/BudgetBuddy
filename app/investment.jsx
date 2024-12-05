@@ -33,7 +33,12 @@ const Investment = () => {
     const names = new Set(investments.map(inv => inv.name));
     setUniqueInvestments(names);
   }, [investments]);
-
+  
+const PortfolioSummary = ({ totalValue }) => (
+  <Text style={styles.portfolioText}>
+    Total Portfolio Value: {formatCurrency(totalValue)}
+  </Text>
+);
   const formatCurrency = (value) => {
     const numValue = parseFloat(value);
     return new Intl.NumberFormat('en-US', {

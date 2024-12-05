@@ -33,13 +33,13 @@ const CircularChart = ({ data }) => {
 
   const chartData = data.map(expense => {
     const percentage = ((expense.value / total) * 100).toFixed(2);
-
     return {
-      name: `${expense.name}: $${expense.value.toFixed(2)} (${percentage}%)`, 
+      name: `${expense.name}: $${expense.value.toFixed(2)} (${percentage}%)`,
       amount: expense.value,                                               
       color: categoryColors[expense.name] || '#999999', 
-      legendFontColor: "#fff", // Changed to white for better visibility on green background
-      legendFontSize: 12,
+      legendFontColor: "#fff",
+      legendFontSize: 10.3,
+     
     };
   });
 
@@ -47,7 +47,7 @@ const CircularChart = ({ data }) => {
     <View style={{ backgroundColor: 'transparent' }}>
       <PieChart
         data={chartData}
-        width={260}
+        width={240}
         height={150}
         chartConfig={{
           color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -61,10 +61,10 @@ const CircularChart = ({ data }) => {
         }}
         backgroundColor="transparent"
         paddingLeft="0"
-        center={[10, 10]}
+        center={[0, 0]}
         absolute
         accessor="amount"
-        hasLegend={true}
+        hideLegendNumbers={true} // Add this prop to hide the numbers next to dots
       />
       <Text style={{ color: '#fff', textAlign: 'center', marginTop: 10 }}>
         Total Expenses: ${total.toFixed(2)}
